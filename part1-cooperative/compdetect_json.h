@@ -4,8 +4,15 @@
 #include "compdetect.h"
 
 // ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
-Config read_config(const char *filename) {
-    Config config = {
+/**
+ *
+ * @param configuration_file
+ * @return
+ */
+Configuration read_configuration(const char *configuration_file) {
+
+    // create a configuration object with the default values (in case some attributes are not provided in the file)
+    Configuration configuration = {
         .udp_src_port = DEF_UDP_SRC_PORT,
         .udp_dst_port = DEF_UDP_DST_PORT,
         .tcp_syn_x = DEF_TCP_SYN_X,
@@ -18,60 +25,87 @@ Config read_config(const char *filename) {
         .ttl = DEF_UDP_TTL
     };
 
-    FILE *file = fopen(filename, "r");
-    if (!file) {
+    // create file stream to read from the input configuration
+    FILE *raw_file = fopen(configuration_file, "r");
+
+    // input parameter checking: make sure the file can be opened
+    if (!raw_file) {
         perror("Error opening configuration file");
         exit(EXIT_FAILURE);
     }
 
-    fseek(file, 0, SEEK_END);
-    long filesize = ftell(file);
-    rewind(file);
+    // determine file size
+    fseek(raw_file, 0, SEEK_END);
+    const long filesize = ftell(raw_file);
+    rewind(raw_file);
 
-    char *json_data = (char *)malloc(filesize + 1);
-    fread(json_data, 1, filesize, file);
-    json_data[filesize] = '\0';
-    fclose(file);
+    // read file contents into memory
+    char *json_file = malloc(filesize + 1);
+    fread(json_file, 1, filesize, raw_file);
+    json_file[filesize] = '\0';
 
-    cJSON *json = cJSON_Parse(json_data);
+    // close the handle to the raw input file
+    fclose(raw_file);
+
+    // parse the json file into a cJSON object
+    cJSON *json = cJSON_Parse(json_file);
+
+    // validate that the json has been properly parsed to avoid errors later
     if (!json) {
-        perror("Error parsing JSON configuration");
+        perror("Unable to parse the provided JSON. Check the Configuration file.");
         exit(EXIT_FAILURE);
     }
 
+    // iterate through the json object and populate the configuration object with the values
     cJSON *item;
     if ((item = cJSON_GetObjectItem(json, "ServerIP")))
-        strncpy(config.server_ip, item->valuestring, sizeof(config.server_ip));
+        strncpy(configuration.server_ip, item->valuestring, sizeof(configuration.server_ip));
+
     if ((item = cJSON_GetObjectItem(json, "UDPSourcePort")))
-        config.udp_src_port = item->valueint;
+        configuration.udp_src_port = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "UDPDestinationPort")))
-        config.udp_dst_port = item->valueint;
+        configuration.udp_dst_port = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "TCPSYNX")))
-        config.tcp_syn_x = item->valueint;
+        configuration.tcp_syn_x = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "TCPSYNY")))
-        config.tcp_syn_y = item->valueint;
+        configuration.tcp_syn_y = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "TCPPreProbePort")))
-        config.tcp_pre_probe = item->valueint;
+        configuration.tcp_pre_probe = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "TCPPostProbePort")))
-        config.tcp_post_probe = item->valueint;
+        configuration.tcp_post_probe = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "UDPPayloadSize")))
-        config.udp_payload_size = item->valueint;
+        configuration.udp_payload_size = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "InterMeasureTime")))
-        config.inter_measure_time = item->valueint;
+        configuration.inter_measure_time = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "UDPPacketCount")))
-        config.udp_packet_count = item->valueint;
+        configuration.udp_packet_count = item->valueint;
+
     if ((item = cJSON_GetObjectItem(json, "TTL")))
-        config.ttl = item->valueint;
+        configuration.ttl = item->valueint;
 
+    // free the memory allocated for the json file
     cJSON_Delete(json);
-    free(json_data);
+    free(json_file);
 
-    return config;
+    return configuration;
 }
 
 // ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
-void print_config(const Config *config) {
-    printf("Configuration Values:\n");
+/**
+ *
+ * @param config
+ */
+void print_configuration(const Configuration *config) {
+    printf("Configuration Settings:\n");
+    printf("======================\n\n");
     printf("Server IP: %s\n", config->server_ip);
     printf("UDP Source Port: %d\n", config->udp_src_port);
     printf("UDP Destination Port: %d\n", config->udp_dst_port);
@@ -82,7 +116,8 @@ void print_config(const Config *config) {
     printf("UDP Payload Size: %dB\n", config->udp_payload_size);
     printf("Inter-Measurement Time: %d seconds\n", config->inter_measure_time);
     printf("Number of UDP Packets: %d\n", config->udp_packet_count);
-    printf("TTL: %d\n", config->ttl);
+    printf("UDP TTL: %d\n", config->ttl);
+    printf("\n");
 }
 
 #endif //COMPDETECT_JSON_H

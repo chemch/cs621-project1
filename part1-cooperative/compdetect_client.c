@@ -14,11 +14,11 @@ int main(const int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // parse configuration
-    char *config_file_name = argv[1];
-    fprintf(stderr, "Parsing Configuration File: %s\n", config_file_name);
-    const Config config = read_config(config_file_name);
-    print_config(&config);
+    // read configuration file and print to terminal for validation
+    char *configuration_file = argv[1];
+    fprintf(stderr, "Configuration File: %s\n\n", configuration_file);
+    const Configuration config = read_configuration(configuration_file);
+    print_configuration(&config);
 
     return EXIT_SUCCESS;
 }

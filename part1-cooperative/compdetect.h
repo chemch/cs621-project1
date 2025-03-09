@@ -38,6 +38,6 @@ typedef struct {
     int inter_measure_time;
     int udp_packet_count;
     int ttl;
-} Config;
+} Configuration;
 
 #endif //COMPDETECT_H
