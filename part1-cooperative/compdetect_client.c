@@ -17,7 +17,22 @@
 #define DEF_UDP_PACKET_COUNT 6000
 #define DEF_TTL 255
 
-int main(void) {
-    printf("Hello Client\n");
-    return 0;
+/*
+ * PART 1: Compression Detection Client/Server Application
+*/
+int main(const int argc, char *argv[]) {
+
+    // perform input parameter check
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <configuration.json>\n", argv[0]);
+
+        // exit with failure
+        return EXIT_FAILURE;
+    }
+
+    // parse config file provided
+    char *config_file_name= argv[1];
+    fprintf(stderr, "Parsing Configuration File: %s\n", config_file_name);
+
+    return EXIT_SUCCESS;
 }
