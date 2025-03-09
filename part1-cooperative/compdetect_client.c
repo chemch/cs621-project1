@@ -20,5 +20,7 @@ int main(const int argc, char *argv[]) {
     const Configuration config = read_configuration(configuration_file);
     print_configuration(&config);
 
+    
+
     return EXIT_SUCCESS;
 }

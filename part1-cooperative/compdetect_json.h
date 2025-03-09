@@ -57,39 +57,39 @@ Configuration read_configuration(const char *configuration_file) {
     }
 
     // iterate through the json object and populate the configuration object with the values
-    cJSON *item;
-    if ((item = cJSON_GetObjectItem(json, "ServerIP")))
-        strncpy(configuration.server_ip, item->valuestring, sizeof(configuration.server_ip));
+    cJSON *json_item;
+    if ((json_item = cJSON_GetObjectItem(json, "ServerIP")))
+        strncpy(configuration.server_ip, json_item->valuestring, sizeof(configuration.server_ip));
 
-    if ((item = cJSON_GetObjectItem(json, "UDPSourcePort")))
-        configuration.udp_src_port = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "UDPSourcePort")))
+        configuration.udp_src_port = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "UDPDestinationPort")))
-        configuration.udp_dst_port = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "UDPDestinationPort")))
+        configuration.udp_dst_port = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "TCPSYNX")))
-        configuration.tcp_syn_x = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "TCPSYNX")))
+        configuration.tcp_syn_x = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "TCPSYNY")))
-        configuration.tcp_syn_y = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "TCPSYNY")))
+        configuration.tcp_syn_y = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "TCPPreProbePort")))
-        configuration.tcp_pre_probe = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "TCPPreProbePort")))
+        configuration.tcp_pre_probe = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "TCPPostProbePort")))
-        configuration.tcp_post_probe = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "TCPPostProbePort")))
+        configuration.tcp_post_probe = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "UDPPayloadSize")))
-        configuration.udp_payload_size = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "UDPPayloadSize")))
+        configuration.udp_payload_size = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "InterMeasureTime")))
-        configuration.inter_measure_time = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "InterMeasureTime")))
+        configuration.inter_measure_time = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "UDPPacketCount")))
-        configuration.udp_packet_count = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "UDPPacketCount")))
+        configuration.udp_packet_count = json_item->valueint;
 
-    if ((item = cJSON_GetObjectItem(json, "TTL")))
-        configuration.ttl = item->valueint;
+    if ((json_item = cJSON_GetObjectItem(json, "TTL")))
+        configuration.ttl = json_item->valueint;
 
     // free the memory allocated for the json file
     cJSON_Delete(json);
