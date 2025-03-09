@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main(void) {
-    printf("Hello Compression\n");
+    printf("Hello Server\n");
     return 0;
 }
