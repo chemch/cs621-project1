@@ -25,6 +25,9 @@
 #define DEF_UDP_PACKET_COUNT 6000
 #define DEF_UDP_TTL 255
 
+// buffer size for communication between client and server
+#define DEF_BUFFER_SIZE 4096
+
 // custom struct definition for configuration
 typedef struct {
     char server_ip[64];

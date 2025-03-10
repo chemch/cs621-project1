@@ -184,7 +184,7 @@ void forward_configuration_to_server(Configuration *configuration) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(configuration->tcp_pre_probe);
 
-    // set the server port and validate
+    // set the server ip and validate
     if (inet_pton(AF_INET, configuration->server_ip, &server_addr.sin_addr) != 1) {
         perror("Error: Invalid Server IP Address");
         close(sock);
@@ -216,7 +216,7 @@ void forward_configuration_to_server(Configuration *configuration) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Successfully sent Config to %s:%d!!!\n", configuration->server_ip, configuration->tcp_pre_probe);
+    printf("Successfully sent Config to %s:%d \n", configuration->server_ip, configuration->tcp_pre_probe);
 
     // release unneeded handles
     free(json_data);

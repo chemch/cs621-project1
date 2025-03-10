@@ -1,23 +1,18 @@
 #include "compdetect.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include "cJSON.h"
-
-#define BUFFER_SIZE 4096
-
-
 /**
  *
  * @param port to connect to tcp client on
  */
 void run_server(int port) {
+
+    // define socket parameters for the client and server
     int server_sock, client_sock;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
-    char buffer[BUFFER_SIZE];
+
+    // define buffer for receiving data from the client`
+    char buffer[DEF_BUFFER_SIZE];
 
     // Create socket
     if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -52,7 +47,7 @@ void run_server(int port) {
     printf("Client connected!\n");
 
     // Receive JSON data
-    int received_bytes = recv(client_sock, buffer, BUFFER_SIZE - 1, 0);
+    const int received_bytes = recv(client_sock, buffer, DEF_BUFFER_SIZE - 1, 0);
     if (received_bytes <= 0) {
         perror("Failed to receive data");
         exit(EXIT_FAILURE);
@@ -83,7 +78,7 @@ void run_server(int port) {
 /*
  * PART 1 - Server Side: Compression Detection Client/Server Application
 */
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
 
     // perform input parameter check
     if (argc != 2) {
