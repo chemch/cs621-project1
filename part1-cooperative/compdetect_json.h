@@ -7,7 +7,7 @@
 /**
  *
  * @param configuration_file
- * @return
+ * @return parsed configuration struct from the input file
  */
 Configuration read_configuration(const char *configuration_file) {
 
