@@ -1,29 +1,34 @@
-## setting the compiler to gcc
+# Compiler and Flags
 CC = gcc
-
-## setting compiler flags: -Wall enables all warnings, -Wextra enables additional warnings, -std=c11 uses the C11 standard
 CFLAGS = -Wall -Wextra -std=c11
 
-## source files to compile to object files
-SRC = compdetect_client.c cJSON.c
+# Source files for client and server
+SRC_CLIENT = compdetect_client.c cJSON.c
+SRC_SERVER = compdetect_server.c cJSON.c
 
-## automatically convert .c files to .o files
-OBJ = $(SRC:.c=.o)
+# Object files
+OBJ_CLIENT = $(SRC_CLIENT:.c=.o)
+OBJ_SERVER = $(SRC_SERVER:.c=.o)
 
-## executable name to generate
-TARGET = compdetect_client
+# Output binaries
+TARGET_CLIENT = compdetect_client
+TARGET_SERVER = compdetect_server
 
-## by default, build the executable
-all: $(TARGET)
+# Default target: Build both client and server
+all: $(TARGET_CLIENT) $(TARGET_SERVER)
 
-## link object files into the final executable
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ)
+# Build client
+$(TARGET_CLIENT): $(OBJ_CLIENT)
+	$(CC) $(CFLAGS) -o $(TARGET_CLIENT) $(OBJ_CLIENT)
 
-## convert each .c file into a .o file
+# Build server
+$(TARGET_SERVER): $(OBJ_SERVER)
+	$(CC) $(CFLAGS) -o $(TARGET_SERVER) $(OBJ_SERVER)
+
+# Compile .c files to .o files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-## remove all object files and the compiled executable
+# Clean up compiled files
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJ_CLIENT) $(TARGET_CLIENT) $(OBJ_SERVER) $(TARGET_SERVER)
