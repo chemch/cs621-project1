@@ -69,7 +69,7 @@ void run_server(int port) {
     }
 
     // Extract values (example)
-    cJSON *server_ip_item = cJSON_GetObjectItem(json, "ServerIP");
+    const cJSON *server_ip_item = cJSON_GetObjectItem(json, "ServerIP");
     if (cJSON_IsString(server_ip_item)) {
         printf("Server IP from client: %s\n", server_ip_item->valuestring);
     }

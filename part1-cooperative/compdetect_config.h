@@ -98,6 +98,8 @@ Configuration read_configuration(const char *configuration_file) {
     return configuration;
 }
 
+
+
 // ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**
  *
@@ -118,6 +120,107 @@ void print_configuration(const Configuration *config) {
     printf("Number of UDP Packets: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
     printf("\n");
+}
+
+/**
+ *
+ * @param config to convert
+ * @return converted json object
+ */
+// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
+char *convert_configuration_to_json(Configuration *config) {
+
+    // input parameter checking: confirm config is not empty
+    if (!config) {
+        return NULL;
+    }
+
+    // create empty json object for populating
+    cJSON *json_obj = cJSON_CreateObject();
+
+    // Validate that the json object was created successfully
+    if (!json_obj) {
+        return NULL;
+    }
+
+    // Add configuration values to object
+    cJSON_AddStringToObject(json_obj, "ServerIP", config->server_ip);
+    cJSON_AddNumberToObject(json_obj, "UDPSourcePort", config->udp_src_port);
+    cJSON_AddNumberToObject(json_obj, "UDPDestinationPort", config->udp_dst_port);
+    cJSON_AddNumberToObject(json_obj, "TCPSYNX", config->tcp_syn_x);
+    cJSON_AddNumberToObject(json_obj, "TCPSYNY", config->tcp_syn_y);
+    cJSON_AddNumberToObject(json_obj, "TCPPreProbePort", config->tcp_pre_probe);
+    cJSON_AddNumberToObject(json_obj, "TCPPostProbePort", config->tcp_post_probe);
+    cJSON_AddNumberToObject(json_obj, "UDPPayloadSize", config->udp_payload_size);
+    cJSON_AddNumberToObject(json_obj, "InterMeasureTime", config->inter_measure_time);
+    cJSON_AddNumberToObject(json_obj, "UDPPacketCount", config->udp_packet_count);
+    cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
+
+    // Convert JSON object to string
+    char *json_string = cJSON_PrintUnformatted(json_obj);
+
+    // Free the JSON object
+    cJSON_Delete(json_obj);
+
+    return json_string;
+}
+
+/**
+ *
+ * @param configuration
+ */
+// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
+void forward_configuration_to_server(Configuration *configuration) {
+    int sock;
+    struct sockaddr_in server_addr;
+
+    // create tcp socket
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("Error: Failed to create socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // set the server port
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(configuration->tcp_pre_probe);
+
+    // set the server port and validate
+    if (inet_pton(AF_INET, configuration->server_ip, &server_addr.sin_addr) != 1) {
+        perror("Error: Invalid Server IP Address");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    // initiate connection to server using ip and port
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+        perror("Error: Failed to connect to server");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    // convert configuration to json for transmission over the network
+    char *json_data = convert_configuration_to_json(configuration);
+
+    // validate that the json was created successfully
+    if (!json_data) {
+        perror("Error: Failed to convert configuration to JSON");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    // forward JSON configuration using the socket
+    if (send(sock, json_data, strlen(json_data), 0) == -1) {
+        perror("Error: Failed to Forward the Configuration to Server. Check the socket settings");
+        free(json_data);
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Successfully sent Config to %s:%d!!!\n", configuration->server_ip, configuration->tcp_pre_probe);
+
+    // release unneeded handles
+    free(json_data);
+    close(sock);
 }
 
 #endif //COMPDETECT_JSON_H
