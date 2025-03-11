@@ -79,6 +79,11 @@ void run_server(int port) {
         exit(EXIT_FAILURE);
     }
 
+    // print the configuration parsed from client
+    printf("Configuration Settings Received:\n");
+    printf("======================\n\n");
+    print_configuration(&config);
+
     // free the memory allocated for the json object
     cJSON_Delete(json);
 
