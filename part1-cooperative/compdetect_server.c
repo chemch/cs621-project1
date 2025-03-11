@@ -46,7 +46,7 @@ void run_server(int port) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "Client connected on port %d\n", ntohs(client_addr.sin_port));
+    fprintf(stderr, "Client connected using tcp source port %d\n", ntohs(client_addr.sin_port));
 
     // receive JSON data from client
     const int received_bytes = recv(client_sock, buffer, DEF_BUFFER_SIZE - 1, 0);
@@ -58,7 +58,7 @@ void run_server(int port) {
     // terminate the string
     buffer[received_bytes] = '\0';
 
-    printf("Received Configuration from Client: %s\n", buffer);
+    printf("Received Configuration from Client...\n");
 
     // parse the JSON
     cJSON *json = cJSON_Parse(buffer);
