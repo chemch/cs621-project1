@@ -5,7 +5,7 @@
  *
  * @param port to connect to tcp client on
  */
-void run_server(int port) {
+Configuration run_preprobing_phase(int port) {
 
     // define socket parameters for the client and server
     int server_sock, client_sock;
@@ -90,7 +90,24 @@ void run_server(int port) {
     // close the handles to the client and server sockets
     close(client_sock);
     close(server_sock);
+
+    return config;
 }
+
+/**
+ *
+ */
+void run_probing_phase(const Configuration *config) {
+    printf("Running Probing Phase...\n");
+    printf("Using UDP Source Port: %d\n", config->udp_src_port);
+    printf("Using UDP Destination Port: %d\n", config->udp_dst_port);
+    // Implement probing logic using configuration settings
+}
+
+/**
+ *
+ */
+void run_postprobing_phase() {}
 
 
 /*
@@ -113,8 +130,14 @@ int main(const int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // otherwise, run the server
-    run_server(port);
+    // pre-probing phase will allow the server to receive the configuration from the client via a tcp connection
+    Configuration configuration = run_preprobing_phase(port);
+
+    // probing phase will allow the server to receive 2 udp packet trains, 1 w/ high entropy and 1 w/ low entropy
+    run_probing_phase(&configuration);
+
+    // post-probing phase will allow the server calculate compression detection and communicate that back to the client
+    run_postprobing_phase();
 
     // exit will never hit
     return EXIT_SUCCESS;
