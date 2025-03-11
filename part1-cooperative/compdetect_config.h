@@ -99,6 +99,66 @@ Configuration read_configuration(const char *configuration_file) {
 }
 
 
+// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
+/**
+ * 
+ * @param json to convert
+ * @param config resulting from conversion
+ * @return 
+ */
+int json_to_configuration(cJSON *json, Configuration *config) {
+    // input parameter checking, make sure valid config and json
+    if (!json || !config) return 0;
+
+    // iterate through the json object and populate the configuration object with the values
+    cJSON *item;
+    if (((item = cJSON_GetObjectItem(json, "ServerIP"))) && cJSON_IsString(item)) {
+        strncpy(config->server_ip, item->valuestring, sizeof(config->server_ip));
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "UDPSourcePort"))) && cJSON_IsNumber(item)) {
+        config->udp_src_port = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "UDPDestinationPort"))) && cJSON_IsNumber(item)) {
+        config->udp_dst_port = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "TCPSYNX"))) && cJSON_IsNumber(item)) {
+        config->tcp_syn_x = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "TCPSYNY"))) && cJSON_IsNumber(item)) {
+        config->tcp_syn_y = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "TCPPreProbePort"))) && cJSON_IsNumber(item)) {
+        config->tcp_pre_probe = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "TCPPostProbePort"))) && cJSON_IsNumber(item)) {
+        config->tcp_post_probe = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "UDPPayloadSize"))) && cJSON_IsNumber(item)) {
+        config->udp_payload_size = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "InterMeasureTime"))) && cJSON_IsNumber(item)) {
+        config->inter_measure_time = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "UDPPacketCount"))) && cJSON_IsNumber(item)) {
+        config->udp_packet_count = item->valueint;
+    }
+
+    if (((item = cJSON_GetObjectItem(json, "TTL"))) && cJSON_IsNumber(item)) {
+        config->ttl = item->valueint;
+    }
+
+    return 1;
+}
+
 
 // ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**

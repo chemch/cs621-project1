@@ -43,4 +43,25 @@ typedef struct {
     int ttl;
 } Configuration;
 
+// start server and list for incoming connections
+void run_server(int port);
+
+// send configuration to the server
+void forward_configuration_to_server(Configuration *configuration);
+
+// Convert Configuration struct to JSON string (must free the returned string after use)
+char *configuration_to_json(const Configuration *config);
+
+// convert to json to configuration struct
+int json_to_configuration(cJSON *json, Configuration *config);
+
+// read configuration from an input file
+Configuration read_configuration(const char *configuration_file);
+
+// free configuration memory used
+void free_configuration(Configuration *config);
+
+// print configuration values
+void print_configuration(const Configuration *config);
+
 #endif //COMPDETECT_H

@@ -1,4 +1,5 @@
 #include "compdetect.h"
+#include "compdetect_config.h"
 
 /**
  *
@@ -14,62 +15,74 @@ void run_server(int port) {
     // define buffer for receiving data from the client`
     char buffer[DEF_BUFFER_SIZE];
 
-    // Create socket
+    // create new tcp socket
     if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Socket creation failed");
+        perror("Failed to create socket!");
         exit(EXIT_FAILURE);
     }
 
-    // Bind socket to the specified port
+    // server socket settings
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(port);
 
+    // try to bind the server to the socket
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Binding failed");
+        perror("Binding failed!");
         exit(EXIT_FAILURE);
     }
 
-    // Listen for incoming connections
+    // wait for incoming connection
     if (listen(server_sock, 5) == -1) {
-        perror("Listening failed");
+        perror("Listening failed on server!");
         exit(EXIT_FAILURE);
     }
 
     printf("Server listening on port %d...\n", port);
 
-    // Accept connection
+    // accept incoming client connection
     if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len)) == -1) {
-        perror("Connection acceptance failed");
+        perror("Connection acceptance failed!!");
         exit(EXIT_FAILURE);
     }
 
-    printf("Client connected!\n");
+    fprintf(stderr, "Client connected on port %d\n", ntohs(client_addr.sin_port));
 
-    // Receive JSON data
+    // receive JSON data from client
     const int received_bytes = recv(client_sock, buffer, DEF_BUFFER_SIZE - 1, 0);
     if (received_bytes <= 0) {
         perror("Failed to receive data");
         exit(EXIT_FAILURE);
     }
-    buffer[received_bytes] = '\0';  // Null terminate the received data
 
-    printf("Received Configuration: %s\n", buffer);
+    // terminate the string
+    buffer[received_bytes] = '\0';
 
-    // Parse JSON
+    printf("Received Configuration from Client: %s\n", buffer);
+
+    // parse the JSON
     cJSON *json = cJSON_Parse(buffer);
+
+    // validate that the json was parsed successfully
     if (!json) {
-        fprintf(stderr, "Error parsing received JSON\n");
+        fprintf(stderr, "Error parsing received JSON!!!\n");
         exit(EXIT_FAILURE);
     }
 
-    // Extract values (example)
-    const cJSON *server_ip_item = cJSON_GetObjectItem(json, "ServerIP");
-    if (cJSON_IsString(server_ip_item)) {
-        printf("Server IP from client: %s\n", server_ip_item->valuestring);
+    // Convert JSON object to Configuration struct
+    Configuration config;
+    if (!json_to_configuration(json, &config)) {
+        fprintf(stderr, "Unable to convert received JSON to a Configuration struct...\n");
+        cJSON_Delete(json);
+        close(client_sock);
+        close(server_sock);
+        exit(EXIT_FAILURE);
     }
 
+    // free the memory allocated for the json object
     cJSON_Delete(json);
+
+    // close the handles to the client and server sockets
     close(client_sock);
     close(server_sock);
 }
