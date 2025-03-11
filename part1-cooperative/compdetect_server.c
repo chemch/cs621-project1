@@ -80,8 +80,7 @@ Configuration run_preprobing_phase(int port) {
     }
 
     // print the configuration parsed from client
-    printf("Configuration Settings Received:\n");
-    printf("======================\n\n");
+    printf("Configuration Settings Received Successfully!!\n");
     print_configuration(&config);
 
     // free the memory allocated for the json object
