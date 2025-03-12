@@ -3,8 +3,8 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c11
 
 # Source files for client and server
-SRC_CLIENT = compdetect_client.c cJSON.c
-SRC_SERVER = compdetect_server.c cJSON.c
+SRC_CLIENT = compdetect_client.c cJSON.c compdetect_config.c compdetect_udp.c
+SRC_SERVER = compdetect_server.c cJSON.c compdetect_config.c
 
 # Object files
 OBJ_CLIENT = $(SRC_CLIENT:.c=.o)

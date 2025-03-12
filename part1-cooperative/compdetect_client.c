@@ -1,5 +1,4 @@
 #include "compdetect.h"
-#include "compdetect_config.h"
 
 /**
  *
@@ -31,7 +30,17 @@ Configuration run_preprobing_phase(const char *config_file) {
  * @param config to use for generating udp packet trains
  */
 void run_probing_phase(const Configuration *config) {
-    fprintf(stderr, "Probing Phase Starting\n");
+
+    printf("Running Probing Phase...\n");
+    send_udp_packets(config->server_ip, config->udp_src_port, config->udp_dst_port,
+                     config->udp_packet_count, config->udp_payload_size, 0);
+
+    printf("Waiting for %d seconds before high entropy transmission...\n", config->inter_measure_time);
+    sleep(config->inter_measure_time);
+
+    send_udp_packets(config->server_ip, config->udp_src_port, config->udp_dst_port,
+                     config->udp_packet_count, config->udp_payload_size, 1);
+
     print_configuration(config);
 }
 
@@ -63,7 +72,7 @@ int main(const int argc, char *argv[]) {
     run_probing_phase(&configuration);
 
     // post-probing phase: receive results back from server on compression calc results and print
-    run_postprobing_phase(&configuration);
+    // run_postprobing_phase(&configuration);
 
     return EXIT_SUCCESS;
 }

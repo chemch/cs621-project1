@@ -1,5 +1,4 @@
 #include "compdetect.h"
-#include "compdetect_config.h"
 
 /**
  *
