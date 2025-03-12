@@ -34,4 +34,24 @@ void send_udp_packets(const char *server_ip, int src_port, int dst_port, int num
     struct udphdr *udp_header;
     struct pseudo_header psh;
 
+    // Create a raw socket
+    if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)) == -1) {
+        perror("Raw socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Enable IP Header inclusion
+    int optval = 1;
+    if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, &optval, sizeof(optval)) == -1) {
+        perror("setsockopt failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Allocate memory for the packet
+    packet = malloc(sizeof(struct iphdr) + sizeof(struct udphdr) + packet_size);
+    if (!packet) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
 }

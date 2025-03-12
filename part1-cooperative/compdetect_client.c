@@ -30,7 +30,6 @@ Configuration run_preprobing_phase(const char *config_file) {
  * @param config to use for generating udp packet trains
  */
 void run_probing_phase(const Configuration *config) {
-
     printf("Running Probing Phase...\n");
     send_udp_packets(config->server_ip, config->udp_src_port, config->udp_dst_port,
                      config->udp_packet_count, config->udp_payload_size, 0);

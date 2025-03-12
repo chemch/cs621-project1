@@ -30,4 +30,6 @@ unsigned short checksum(void *b, int len);
 void send_udp_packets(const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy);
 void receive_udp_packets(int port);
 
+
+
 #endif //COMPDETECT_UDP_H
