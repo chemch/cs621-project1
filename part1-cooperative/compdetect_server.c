@@ -58,7 +58,7 @@ Configuration run_preprobing_phase(int port) {
     // terminate the string
     buffer[received_bytes] = '\0';
 
-    printf("Received Configuration from Client...\n");
+    printf("Received Configuration from Client...\n\n");
 
     // parse the JSON
     cJSON *json = cJSON_Parse(buffer);
@@ -80,7 +80,6 @@ Configuration run_preprobing_phase(int port) {
     }
 
     // print the configuration parsed from client
-    printf("Configuration Settings Received Successfully!!\n");
     print_configuration(&config);
 
     // free the memory allocated for the json object
