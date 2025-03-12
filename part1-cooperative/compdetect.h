@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 // required local dependency
 #include "cJSON.h"

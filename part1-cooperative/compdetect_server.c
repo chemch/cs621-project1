@@ -96,15 +96,108 @@ Configuration run_preprobing_phase(int port) {
  */
 void run_probing_phase(const Configuration *config) {
     printf("Running Probing Phase...\n");
-    printf("Using UDP Source Port: %d\n", config->udp_src_port);
     printf("Using UDP Destination Port: %d\n", config->udp_dst_port);
-    // Implement probing logic using configuration settings
+
+    printf("Running Probing Phase...\n");
+    printf("Using UDP Destination Port: %d\n", config->udp_dst_port);
+
+    int sock;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+    char buffer[PACKET_SIZE];
+
+    // Create UDP socket
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        perror("UDP socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Bind socket to the UDP destination port
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(config->udp_dst_port);
+
+    if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+        perror("Binding failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Listening for UDP packets on port %d...\n", config->udp_dst_port);
+
+    // Track received packets
+    int low_entropy_received = 0, high_entropy_received = 0;
+    struct timeval low_start, low_end, high_start, high_end;
+
+    int low_entropy_started = 0;
+    int high_entropy_started = 0;
+
+    while (low_entropy_received < config->udp_packet_count || high_entropy_received < config->udp_packet_count) {
+        int received_bytes = recvfrom(sock, buffer, PACKET_SIZE, 0, (struct sockaddr *)&client_addr, &addr_len);
+        if (received_bytes > 0) {
+            // Extract Packet ID (first 2 bytes of payload)
+            int packet_id = (buffer[0] << 8) | buffer[1];
+
+            // Determine entropy level
+            int is_low_entropy = 1;
+            for (int i = 2; i < received_bytes; i++) {
+                if (buffer[i] != 0) {
+                    is_low_entropy = 0;
+                    break;
+                }
+            }
+
+            if (is_low_entropy) {
+                if (!low_entropy_started) {
+                    gettimeofday(&low_start, NULL);  // Capture start time
+                    low_entropy_started = 1;
+                }
+                low_entropy_received++;
+
+                if (low_entropy_received == config->udp_packet_count) {
+                    gettimeofday(&low_end, NULL);  // Capture end time
+                    printf("Low entropy packet train complete.\n");
+                }
+            } else {
+                if (!high_entropy_started) {
+                    gettimeofday(&high_start, NULL);  // Capture start time
+                    high_entropy_started = 1;
+                }
+                high_entropy_received++;
+
+                if (high_entropy_received == config->udp_packet_count) {
+                    gettimeofday(&high_end, NULL);  // Capture end time
+                    printf("High entropy packet train complete.\n");
+                }
+            }
+
+            printf("Received packet ID %d from %s:%d (%d bytes) - %s entropy (%d/%d low, %d/%d high)\n",
+                   packet_id, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port),
+                   received_bytes, is_low_entropy ? "LOW" : "HIGH",
+                   low_entropy_received, config->udp_packet_count,
+                   high_entropy_received, config->udp_packet_count);
+        }
+    }
+
+    printf("Probing phase complete! Received all packets.\n");
+
+    // Calculate time differences
+    double low_entropy_time = (low_end.tv_sec - low_start.tv_sec) + (low_end.tv_usec - low_start.tv_usec) / 1.0e6;
+    double high_entropy_time = (high_end.tv_sec - high_start.tv_sec) + (high_end.tv_usec - high_start.tv_usec) / 1.0e6;
+
+    printf("Low entropy packet train duration: %.6f seconds\n", low_entropy_time);
+    printf("High entropy packet train duration: %.6f seconds\n", high_entropy_time);
+
+    close(sock);
 }
 
 /**
  *
  */
-void run_postprobing_phase() {}
+void run_postprobing_phase() {
+
+
+}
 
 
 /*
