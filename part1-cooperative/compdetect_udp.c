@@ -75,7 +75,7 @@ void send_udp_packets(const char *client_ip, const char *server_ip, int src_port
         ip_header->frag_off = htons(0x4000);  // **Set DF bit**
         ip_header->ttl = 255;
         ip_header->protocol = IPPROTO_UDP;
-        ip_header->saddr = inet_addr();  // Set your actual source IP
+        ip_header->saddr = inet_addr(client_ip);  // Set your actual source IP
         ip_header->daddr = dest_addr.sin_addr.s_addr;
         ip_header->check = checksum(ip_header, sizeof(struct iphdr));
 
