@@ -21,12 +21,9 @@ typedef struct {
 } Configuration;
 
 Configuration read_configuration(const char *configuration_file);
-
 void print_configuration(const Configuration *config);
-
 void forward_configuration_to_server(Configuration *configuration);
-
-// convert to json to configuration struct
 int json_to_configuration(cJSON *json, Configuration *config);
+char *convert_configuration_to_json(Configuration *config);
 
 #endif // COMPDETECT_CONFIG_H

@@ -26,7 +26,7 @@ unsigned short checksum(void *b, int len) {
 }
 
 
-void send_udp_packets(const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy) {
+void send_udp_packets(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy) {
     int sock;
     struct sockaddr_in dest_addr;
     char *packet;
@@ -75,7 +75,7 @@ void send_udp_packets(const char *server_ip, int src_port, int dst_port, int num
         ip_header->frag_off = htons(0x4000);  // **Set DF bit**
         ip_header->ttl = 255;
         ip_header->protocol = IPPROTO_UDP;
-        ip_header->saddr = inet_addr("192.168.1.2");  // Set your actual source IP
+        ip_header->saddr = inet_addr();  // Set your actual source IP
         ip_header->daddr = dest_addr.sin_addr.s_addr;
         ip_header->check = checksum(ip_header, sizeof(struct iphdr));
 

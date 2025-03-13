@@ -180,7 +180,6 @@ int json_to_configuration(cJSON *json, Configuration *config) {
  */
 void print_configuration(const Configuration *config) {
     printf("Configuration Settings:\n");
-    printf("======================\n\n");
     printf("Client IP: %s\n", config->client_ip);
     printf("Server IP: %s\n", config->server_ip);
     printf("UDP Source Port: %d\n", config->udp_src_port);
