@@ -18,6 +18,7 @@ Configuration read_configuration(const char *configuration_file) {
         .tcp_post_probe = DEF_TCP_POST_PROBE,
         .udp_payload_size = DEF_UDP_PAYLOAD_SIZE,
         .inter_measure_time = DEF_INTER_MEASURE_TIME,
+        .phase_transition_time = DEF_PHASE_TRANSITION_TIME,
         .udp_packet_count = DEF_UDP_PACKET_COUNT,
         .ttl = DEF_UDP_TTL
     };
@@ -55,6 +56,10 @@ Configuration read_configuration(const char *configuration_file) {
 
     // iterate through the json object and populate the configuration object with the values
     cJSON *json_item;
+
+    if ((json_item = cJSON_GetObjectItem(json, "ClientIP")))
+    strncpy(configuration.client_ip, json_item->valuestring, sizeof(configuration.client_ip));
+
     if ((json_item = cJSON_GetObjectItem(json, "ServerIP")))
         strncpy(configuration.server_ip, json_item->valuestring, sizeof(configuration.server_ip));
 
@@ -81,6 +86,9 @@ Configuration read_configuration(const char *configuration_file) {
 
     if ((json_item = cJSON_GetObjectItem(json, "InterMeasureTime")))
         configuration.inter_measure_time = json_item->valueint;
+
+    if ((json_item = cJSON_GetObjectItem(json, "PhaseTransitionTime")))
+    configuration.phase_transition_time = json_item->valueint;
 
     if ((json_item = cJSON_GetObjectItem(json, "UDPPacketCount")))
         configuration.udp_packet_count = json_item->valueint;
@@ -109,6 +117,10 @@ int json_to_configuration(cJSON *json, Configuration *config) {
 
     // iterate through the json object and populate the configuration object with the values
     cJSON *item;
+    if (((item = cJSON_GetObjectItem(json, "ClientIP"))) && cJSON_IsString(item)) {
+        strncpy(config->client_ip, item->valuestring, sizeof(config->client_ip));
+    }
+
     if (((item = cJSON_GetObjectItem(json, "ServerIP"))) && cJSON_IsString(item)) {
         strncpy(config->server_ip, item->valuestring, sizeof(config->server_ip));
     }
@@ -145,6 +157,10 @@ int json_to_configuration(cJSON *json, Configuration *config) {
         config->inter_measure_time = item->valueint;
     }
 
+    if (((item = cJSON_GetObjectItem(json, "PhaseTransitionTime"))) && cJSON_IsNumber(item)) {
+        config->phase_transition_time = item->valueint;
+    }
+
     if (((item = cJSON_GetObjectItem(json, "UDPPacketCount"))) && cJSON_IsNumber(item)) {
         config->udp_packet_count = item->valueint;
     }
@@ -165,6 +181,7 @@ int json_to_configuration(cJSON *json, Configuration *config) {
 void print_configuration(const Configuration *config) {
     printf("Configuration Settings:\n");
     printf("======================\n\n");
+    printf("Client IP: %s\n", config->client_ip);
     printf("Server IP: %s\n", config->server_ip);
     printf("UDP Source Port: %d\n", config->udp_src_port);
     printf("UDP Destination Port: %d\n", config->udp_dst_port);
@@ -174,6 +191,7 @@ void print_configuration(const Configuration *config) {
     printf("TCP Post-Probe Port: %d\n", config->tcp_post_probe);
     printf("UDP Payload Size: %dB\n", config->udp_payload_size);
     printf("Inter-Measurement Time: %d seconds\n", config->inter_measure_time);
+    printf("Phase Transition Time: %d seconds\n", config->phase_transition_time);
     printf("Number of UDP Packets: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
     printf("\n");
@@ -201,6 +219,7 @@ char *convert_configuration_to_json(Configuration *config) {
     }
 
     // Add configuration values to object
+    cJSON_AddStringToObject(json_obj, "ClientIP", config->client_ip);
     cJSON_AddStringToObject(json_obj, "ServerIP", config->server_ip);
     cJSON_AddNumberToObject(json_obj, "UDPSourcePort", config->udp_src_port);
     cJSON_AddNumberToObject(json_obj, "UDPDestinationPort", config->udp_dst_port);
@@ -210,6 +229,7 @@ char *convert_configuration_to_json(Configuration *config) {
     cJSON_AddNumberToObject(json_obj, "TCPPostProbePort", config->tcp_post_probe);
     cJSON_AddNumberToObject(json_obj, "UDPPayloadSize", config->udp_payload_size);
     cJSON_AddNumberToObject(json_obj, "InterMeasureTime", config->inter_measure_time);
+    cJSON_AddNumberToObject(json_obj, "PhaseTransitionTime", config->phase_transition_time);
     cJSON_AddNumberToObject(json_obj, "UDPPacketCount", config->udp_packet_count);
     cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
 

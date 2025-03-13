@@ -1,5 +1,6 @@
 {
-  "ServerIP": "192.168.209.129",
+  "ClientIP": "192.168.209.129",
+  "ServerIP": "192.168.209.130",
   "UDPSourcePort": 9876,
   "UDPDestinationPort": 8765,
   "TCPSYNX": 9990,
@@ -8,6 +9,7 @@
   "TCPPostProbePort": 6666,
   "UDPPayloadSize": 1000,
   "InterMeasureTime": 15,
+  "PhaseTransitionTime": 5,
   "UDPPacketCount": 6000,
   "UDPTTL": 255
 }
