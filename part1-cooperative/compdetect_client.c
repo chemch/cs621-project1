@@ -31,8 +31,7 @@ Configuration run_preprobing_phase(const char *config_file) {
  */
 void run_probing_phase(const Configuration *config) {
     // pause phase transition time before starting packet trains
-    sleep(config->inter_measure_time);
-    
+    sleep(config->phase_transition_time);
 
     printf("Running Probing Phase...\n");
     send_udp_packets(config->server_ip, config->udp_src_port, config->udp_dst_port,
