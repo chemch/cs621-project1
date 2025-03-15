@@ -12,47 +12,40 @@
 #include "compdetect.h"
 #include <netinet/ip.h>     // Provides struct iphdr
 
-// Function to calculate checksum
-unsigned short checksum(void *b, int len) {
-    unsigned short *buf = b;
-    unsigned int sum = 0;
-    for (sum = 0; len > 1; len -= 2)
-        sum += *buf++;
-    if (len == 1)
-        sum += *(unsigned char *)buf;
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-    return ~sum;
-}
-
 
 void send_udp_packets(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy) {
     int sock;
-    struct sockaddr_in dest_addr;
-    char *packet;
-    struct iphdr *ip_header;
-    struct udphdr *udp_header;
-    struct pseudo_header psh;
+    struct sockaddr_in src_addr, dest_addr;
+    char buffer[PACKET_SIZE];
 
-    // Create raw socket
-    if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)) == -1) {
-        perror("Raw socket creation failed");
+    // Create a UDP socket
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        perror("[ERROR] UDP socket creation failed");
         exit(EXIT_FAILURE);
     }
+    printf("[DEBUG] UDP socket created successfully.\n");
 
-    // Enable IP header inclusion
-    int optval = 1;
-    if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, &optval, sizeof(optval)) == -1) {
-        perror("setsockopt failed");
+    // Set Don't Fragment (DF) bit
+    int df = IP_PMTUDISC_DO;
+    if (setsockopt(sock, IPPROTO_IP, IP_MTU_DISCOVER, &df, sizeof(df)) == -1) {
+        perror("[ERROR] setsockopt DF bit failed");
+        close(sock);
         exit(EXIT_FAILURE);
     }
+    printf("[DEBUG] DF bit set successfully.\n");
 
-    // Allocate memory for the packet
-    packet = malloc(sizeof(struct iphdr) + sizeof(struct udphdr) + packet_size);
-    if (!packet) {
-        perror("Memory allocation failed");
+    // Bind the socket to the specified source IP and source port (9876)
+    memset(&src_addr, 0, sizeof(src_addr));
+    src_addr.sin_family = AF_INET;
+    src_addr.sin_port = htons(src_port);
+    src_addr.sin_addr.s_addr = inet_addr(client_ip); 
+
+    if (bind(sock, (struct sockaddr *)&src_addr, sizeof(src_addr)) == -1) {
+        perror("[ERROR] Binding source port failed");
+        close(sock);
         exit(EXIT_FAILURE);
     }
+    printf("[DEBUG] Source IP: %s, Source Port: %d bound successfully.\n", client_ip, src_port);
 
     // Set up destination address
     memset(&dest_addr, 0, sizeof(dest_addr));
@@ -60,61 +53,37 @@ void send_udp_packets(const char *client_ip, const char *server_ip, int src_port
     dest_addr.sin_port = htons(dst_port);
     inet_pton(AF_INET, server_ip, &dest_addr.sin_addr);
 
-    srand(time(NULL)); // Initialize random seed
+    printf("[DEBUG] Sending %d %s entropy packets to %s:%d...\n", 
+           num_packets, entropy ? "HIGH" : "LOW", server_ip, dst_port);
 
+    // Send UDP packets
     for (int i = 0; i < num_packets; i++) {
-        memset(packet, 0, sizeof(struct iphdr) + sizeof(struct udphdr) + packet_size);
+        memset(buffer, 0, PACKET_SIZE);
 
-        // Construct IP header
-        ip_header = (struct iphdr *)packet;
-        ip_header->ihl = 5;  // Internet Header Length (5 * 4 = 20 bytes)
-        ip_header->version = 4;
-        ip_header->tos = 0;
-        ip_header->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + packet_size);
-        ip_header->id = htons(i);  // Unique packet ID
-        ip_header->frag_off = htons(0x4000);  // **Set DF bit**
-        ip_header->ttl = 255;
-        ip_header->protocol = IPPROTO_UDP;
-        ip_header->saddr = inet_addr(client_ip);  // Set your actual source IP
-        ip_header->daddr = dest_addr.sin_addr.s_addr;
-        ip_header->check = checksum(ip_header, sizeof(struct iphdr));
+        // Packet ID (First 2 bytes)
+        buffer[0] = (i >> 8) & 0xFF;  // High byte
+        buffer[1] = i & 0xFF;         // Low byte
 
-        // Construct UDP header
-        udp_header = (struct udphdr *)(packet + sizeof(struct iphdr));
-        udp_header->source = htons(src_port);
-        udp_header->dest = htons(dst_port);
-        udp_header->len = htons(sizeof(struct udphdr) + packet_size);
-        udp_header->check = 0;  // Leave checksum calculation for later
+        // Fill the payload with low (zeros) or high (random) entropy data
+        if (entropy) {
+            for (int j = 2; j < packet_size; j++) {
+                buffer[j] = rand() % 256;
+            }
+        } else {
+            memset(buffer + 2, 0, packet_size - 2);
+        }
 
-        // Construct pseudo header for checksum calculation
-        psh.source_address = ip_header->saddr;
-        psh.dest_address = ip_header->daddr;
-        psh.placeholder = 0;
-        psh.protocol = IPPROTO_UDP;
-        psh.udp_length = udp_header->len;
-
-        // Copy pseudo header + UDP header + payload for checksum calculation
-        char *checksum_buffer = malloc(sizeof(struct pseudo_header) + sizeof(struct udphdr) + packet_size);
-        memcpy(checksum_buffer, &psh, sizeof(struct pseudo_header));
-        memcpy(checksum_buffer + sizeof(struct pseudo_header), udp_header, sizeof(struct udphdr) + packet_size);
-        udp_header->check = checksum(checksum_buffer, sizeof(struct pseudo_header) + sizeof(struct udphdr) + packet_size);
-        free(checksum_buffer);
-
-        // Set payload data (First 2 bytes = Packet ID)
-        char *payload = packet + sizeof(struct iphdr) + sizeof(struct udphdr);
-        payload[0] = (i >> 8) & 0xFF;  // High byte of packet ID
-        payload[1] = i & 0xFF;         // Low byte of packet ID
-        memset(payload + 2, entropy ? rand() % 256 : 0, packet_size - 2);  // Fill remaining payload
-
-        // Send the UDP packet
-        if (sendto(sock, packet, ntohs(ip_header->tot_len), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
-            perror("Packet send failed");
+        // Send packet
+        if (sendto(sock, buffer, packet_size, 0, 
+                   (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
+            perror("[ERROR] Packet send failed");
+        } else {
+            printf("[DEBUG] Sent packet ID %d to %s:%d (%d bytes)\n",
+                   i, server_ip, dst_port, packet_size);
         }
     }
 
-    printf("Sent %d %s entropy UDP packets to %s:%d with DF bit set\n",
-           num_packets, entropy == 0 ? "LOW" : "HIGH", server_ip, dst_port);
+    printf("[DEBUG] Finished sending %s entropy packets.\n", entropy ? "HIGH" : "LOW");
 
-    free(packet);
     close(sock);
 }
