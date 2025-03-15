@@ -2,6 +2,8 @@
 #include <sys/time.h>  
 #include <poll.h> 
 
+#define MAX_UDP_BUFFER 2500000 
+
 /**
  *
  * @param port to connect to tcp client on
@@ -105,7 +107,7 @@ void run_probing_phase(const Configuration *config) {
     int sock;
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
-    char buffer[PACKET_SIZE];
+    char buffer[config->udp_payload_size];
 
     // Create UDP socket
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -113,6 +115,12 @@ void run_probing_phase(const Configuration *config) {
         exit(EXIT_FAILURE);
     }
     printf("[DEBUG] UDP socket created successfully.\n");
+
+    // Increase socket receive buffer size
+    int rcvbuf_size = MAX_UDP_BUFFER;
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, sizeof(rcvbuf_size)) == -1) {
+        perror("[ERROR] setsockopt SO_RCVBUF failed");
+    }
 
     // Bind socket to the UDP destination port
     memset(&server_addr, 0, sizeof(server_addr));
@@ -122,124 +130,70 @@ void run_probing_phase(const Configuration *config) {
 
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("[ERROR] Binding failed");
+        close(sock);
         exit(EXIT_FAILURE);
     }
-    
+
     printf("[DEBUG] Server bound to UDP port %d.\n", config->udp_dst_port);
     printf("Listening for UDP packets on port %d...\n", config->udp_dst_port);
 
-    // Track received packets
+    // Packet reception tracking
     int low_entropy_received = 0, high_entropy_received = 0;
-    struct timeval low_start, low_end, high_start, high_end;
-    struct timeval last_received_time;
+    struct timeval low_start, low_end, high_start, high_end, last_received_time;
+    memset(&low_start, 0, sizeof(low_start));
+    memset(&low_end, 0, sizeof(low_end));
+    memset(&high_start, 0, sizeof(high_start));
+    memset(&high_end, 0, sizeof(high_end));
 
-    int low_entropy_started = 0;
-    int high_entropy_started = 0;
-    int switching_to_high = 0;  // Flag to indicate train transition
+    int low_entropy_started = 0, high_entropy_started = 0;
+    int switching_to_high = 0;
 
-    struct pollfd fds;
-    fds.fd = sock;
-    fds.events = POLLIN;
+    while (low_entropy_received < config->udp_packet_count || high_entropy_received < config->udp_packet_count) {
+        int received_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, 
+                                      (struct sockaddr *)&client_addr, &addr_len);
 
-    int timeout_ms = config->inter_measure_time * 1000;  // Convert seconds to milliseconds
-
-    while ((low_entropy_received < config->udp_packet_count && !high_entropy_started) || 
-            high_entropy_received < config->udp_packet_count) {
-
-        printf("[DEBUG] Waiting for packets... (polling for %d ms)\n", timeout_ms);
-        fflush(stdout);  // Ensure immediate output
-
-        int poll_result = poll(&fds, 1, timeout_ms);
-        
-        if (poll_result == 0) {
-            // Timeout: No packets received within Inter-Measurement Time
-            if (!switching_to_high) {
-                printf("[DEBUG] Timeout reached! No packets received for %d seconds. Marking low entropy train as complete.\n",
-                       config->inter_measure_time);
-                low_end = last_received_time;  // Use last known packet time
-                switching_to_high = 1;         // Move to high-entropy train
-                gettimeofday(&high_start, NULL);  // Start timing for high-entropy train
-            } else {
-                printf("[DEBUG] Timeout reached! No packets received for %d seconds. Marking high entropy train as complete.\n",
-                       config->inter_measure_time);
-                high_end = last_received_time;  // Use last known packet time
-                break;  // Probing phase complete
-            }
-            continue;  // Skip recvfrom() and transition
-        } else if (poll_result < 0) {
-            perror("[ERROR] poll() failed");
-            exit(EXIT_FAILURE);
-        }
-
-        printf("[DEBUG] poll() detected incoming data.\n");
-        fflush(stdout);
-
-        int received_bytes = recvfrom(sock, buffer, PACKET_SIZE, 0, (struct sockaddr *)&client_addr, &addr_len);
-        
         if (received_bytes > 0) {
-            gettimeofday(&last_received_time, NULL);  // Update last received packet time
-
-            printf("[DEBUG] Received %d bytes from %s:%d\n",
-                   received_bytes, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-            fflush(stdout);
+            gettimeofday(&last_received_time, NULL);
 
             // Extract Packet ID (first 2 bytes of payload)
             int packet_id = (buffer[0] << 8) | buffer[1];
 
-            // Check if packet is high entropy
-            int is_high_entropy = 0;
-            for (int i = 2; i < received_bytes; i++) {
-                if (buffer[i] != 0) {
-                    is_high_entropy = 1;
+            if (!switching_to_high) {
+                if (!low_entropy_started) {
+                    gettimeofday(&low_start, NULL);
+                    printf("[DEBUG] Low entropy train STARTED at %ld.%06ld\n", low_start.tv_sec, low_start.tv_usec);
+                    low_entropy_started = 1;
+                }
+
+                low_entropy_received++;
+                low_end = last_received_time;
+
+                if (low_entropy_received == config->udp_packet_count) {
+                    printf("[DEBUG] Low entropy train COMPLETE at %ld.%06ld\n", low_end.tv_sec, low_end.tv_usec);
+                    switching_to_high = 1;
+                }
+            } else {
+                if (!high_entropy_started) {
+                    gettimeofday(&high_start, NULL);
+                    printf("[DEBUG] High entropy train STARTED at %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
+                    high_entropy_started = 1;
+                }
+
+                high_entropy_received++;
+                high_end = last_received_time;
+
+                if (high_entropy_received == config->udp_packet_count) {
+                    printf("[DEBUG] High entropy train COMPLETE at %ld.%06ld\n", high_end.tv_sec, high_end.tv_usec);
                     break;
                 }
             }
 
-            if (!switching_to_high) {
-                if (!low_entropy_started) {
-                    gettimeofday(&low_start, NULL);  // Capture start time
-                    low_entropy_started = 1;
-                }
-
-                if (is_high_entropy) {
-                    // High entropy detected, transition immediately
-                    printf("[DEBUG] WARNING: High entropy packet detected! Ending low-entropy train.\n");
-                    low_end = last_received_time;  // Ensure low_end is set
-                    switching_to_high = 1;
-                    gettimeofday(&high_start, NULL);  // Start high-entropy train timing
-                } else {
-                    low_entropy_received++;
-                    low_end = last_received_time;  // Continuously update last known packet time
-                }
-
-                if (low_entropy_received == config->udp_packet_count) {
-                    printf("[DEBUG] Low entropy packet train complete.\n");
-                    switching_to_high = 1;
-                    gettimeofday(&high_start, NULL);  // Start high-entropy train timing
-                }
-            } 
-            
-            if (switching_to_high) {
-                if (!high_entropy_started) {
-                    gettimeofday(&high_start, NULL);  // Ensure start time is captured
-                    high_entropy_started = 1;
-                }
-                high_entropy_received++;
-                high_end = last_received_time;  // Continuously update last known packet time
-
-                if (high_entropy_received == config->udp_packet_count) {
-                    printf("[DEBUG] High entropy packet train complete.\n");
-                    break;  // End loop once all high-entropy packets are received
-                }
-            }
-
-            printf("Received packet ID %d from %s:%d (%d bytes) - Train %s (%d/%d low, %d/%d high)\n",
+            printf("Received Packet ID %d from %s:%d (%d bytes) - Train %s (%d/%d low, %d/%d high)\n",
                    packet_id, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port),
                    received_bytes, 
                    switching_to_high ? "HIGH" : "LOW",
                    low_entropy_received, config->udp_packet_count,
                    high_entropy_received, config->udp_packet_count);
-            fflush(stdout);
         } else {
             perror("[ERROR] recvfrom() failed");
         }
@@ -247,13 +201,12 @@ void run_probing_phase(const Configuration *config) {
 
     printf("[DEBUG] Probing phase complete! Received all packets or timed out.\n");
 
-    // Ensure last received time is recorded
-    if (low_entropy_received > 0 && switching_to_high) {
-        low_end = last_received_time;
-    }
-    if (high_entropy_received > 0) {
-        high_end = last_received_time;
-    }
+    // Debugging: Print timestamps
+    printf("[DEBUG] Final Timestamps:\n");
+    printf("  Low Start: %ld.%06ld\n", low_start.tv_sec, low_start.tv_usec);
+    printf("  Low End: %ld.%06ld\n", low_end.tv_sec, low_end.tv_usec);
+    printf("  High Start: %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
+    printf("  High End: %ld.%06ld\n", high_end.tv_sec, high_end.tv_usec);
 
     // Calculate time differences
     double low_entropy_time = (low_end.tv_sec - low_start.tv_sec) + (low_end.tv_usec - low_start.tv_usec) / 1.0e6;
