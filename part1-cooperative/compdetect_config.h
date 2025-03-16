@@ -15,7 +15,6 @@ typedef struct {
     int tcp_post_probe;
     int udp_payload_size;
     int inter_measure_time;
-    int phase_transition_time;
     int udp_packet_count;
     int ttl;
 } Configuration;
