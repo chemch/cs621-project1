@@ -1,17 +1,4 @@
-#include "compdetect_udp.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
-#include <netinet/udp.h>
-#include <time.h>
-#include "compdetect.h"
-#include <netinet/ip.h>     // Provides struct iphdr
-
+#include "cUDP.h"
 
 void send_udp_packets(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy) {
     int sock;

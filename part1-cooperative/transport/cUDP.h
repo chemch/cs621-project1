@@ -1,15 +1,7 @@
 #ifndef COMPDETECT_UDP_H
 #define COMPDETECT_UDP_H
 
-#include <stdio.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netinet/ip.h>     // Provides struct iphdr
-#include <netinet/udp.h>    // Provides struct udphdr
+#include "app/compdetect.h"
 
 #define UDP_SRC_PORT 9876
 #define UDP_DST_PORT 8765
@@ -26,7 +18,6 @@ struct pseudo_header {
 };
 
 // Function Prototypes
-unsigned short checksum(void *b, int len);
 void send_udp_packets(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy);
 
 

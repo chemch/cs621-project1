@@ -1,7 +1,7 @@
 #ifndef COMPDETECT_CONFIG_H
 #define COMPDETECT_CONFIG_H
 
-#include "cJSON.h"
+#include "app/compdetect.h"
 
 // custom struct definition for configuration
 typedef struct {

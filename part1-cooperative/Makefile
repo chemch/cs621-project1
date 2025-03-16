@@ -1,34 +1,42 @@
 # Compiler and Flags
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c11 -Ijson -Iconfiguration -Itransport -Iapp -I.
 
-# Source files for client and server
-SRC_CLIENT = compdetect_client.c cJSON.c compdetect_config.c compdetect_udp.c
-SRC_SERVER = compdetect_server.c cJSON.c compdetect_config.c
+BIN_DIR = bin
+BUILD_DIR = build
 
-# Object files
-OBJ_CLIENT = $(SRC_CLIENT:.c=.o)
-OBJ_SERVER = $(SRC_SERVER:.c=.o)
+# Source files
+SRC_CLIENT = app/compdetect_client.c json/cJSON.c configuration/cConfig.c transport/cUDP.c
+SRC_SERVER = app/compdetect_server.c json/cJSON.c configuration/cConfig.c
 
-# Output binaries
-TARGET_CLIENT = compdetect_client
-TARGET_SERVER = compdetect_server
+# Object files (stored in build/)
+OBJ_CLIENT = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_CLIENT))
+OBJ_SERVER = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_SERVER))
 
-# Default target: Build both client and server
-all: $(TARGET_CLIENT) $(TARGET_SERVER)
+# Output binaries (stored in bin/)
+TARGET_CLIENT = $(BIN_DIR)/compdetect_client
+TARGET_SERVER = $(BIN_DIR)/compdetect_server
 
-# Build client
+# Default target
+all: $(BIN_DIR) $(BUILD_DIR) $(TARGET_CLIENT) $(TARGET_SERVER)
+
+# Create directories
+$(BIN_DIR) $(BUILD_DIR):
+	mkdir -p $@
+
+# Build client binary
 $(TARGET_CLIENT): $(OBJ_CLIENT)
-	$(CC) $(CFLAGS) -o $(TARGET_CLIENT) $(OBJ_CLIENT)
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Build server
+# Build server binary
 $(TARGET_SERVER): $(OBJ_SERVER)
-	$(CC) $(CFLAGS) -o $(TARGET_SERVER) $(OBJ_SERVER)
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Compile .c files to .o files
-%.o: %.c
+# Compile .c files to .o files in build/
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean up compiled files
+# Clean up
 clean:
-	rm -f $(OBJ_CLIENT) $(TARGET_CLIENT) $(OBJ_SERVER) $(TARGET_SERVER)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)

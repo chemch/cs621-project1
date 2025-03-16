@@ -1,4 +1,4 @@
-#include "compdetect.h"
+#include "cConfig.h"
 
 // ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**

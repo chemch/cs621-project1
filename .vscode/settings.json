@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "cconfig.h": "c",
+        "compdetect.h": "c"
+    }
+}

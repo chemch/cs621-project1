@@ -1,5 +1,4 @@
 #include "compdetect.h"
-#include <sys/time.h>  
 
 #define MAX_UDP_BUFFER 2500000 
 #define MAX_ARRIVAL_TIME_DELTA .1

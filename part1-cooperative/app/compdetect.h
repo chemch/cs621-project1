@@ -10,11 +10,15 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <netinet/ip.h>     // Provides struct iphdr
+#include <netinet/in.h>
+#include <netinet/udp.h>    // Provides struct udphdr
+#include <time.h>
 
-// required local dependency
-#include "cJSON.h"
-#include "compdetect_config.h"
-#include "compdetect_udp.h"
+// required local dependencies
+#include "json/cJSON.h"
+#include "configuration/cConfig.h"
+#include "transport/cUDP.h"
 
 // application defaults (per project 1 instructions)
 #define DEF_UDP_SRC_PORT 9876
