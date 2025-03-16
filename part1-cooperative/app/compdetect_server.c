@@ -1,4 +1,5 @@
 #include "compdetect.h"
+#include <sys/time.h>  
 
 #define MAX_UDP_BUFFER 2500000 
 #define MAX_ARRIVAL_TIME_DELTA .1
@@ -14,7 +15,7 @@ Configuration run_preprobing_phase(int port) {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    // define buffer for receiving data from the client`
+    // define buffer for receiving data from the client
     char buffer[DEF_BUFFER_SIZE];
 
     // create new tcp socket
@@ -123,11 +124,11 @@ double run_probing_phase(const Configuration *config) {
 
     // Set socket receive timeout
     struct timeval timeout;
-    timeout.tv_sec = config->inter_measure_time * .5;  // Timeout after 5 seconds of no packets
+    timeout.tv_sec = config->inter_measure_time + 1;
     timeout.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    // Bind socket to the UDP destination port
+    // Bind socket
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -142,7 +143,7 @@ double run_probing_phase(const Configuration *config) {
     printf("[DEBUG] Server bound to UDP port %d.\n", config->udp_dst_port);
     printf("Listening for UDP packets on port %d...\n", config->udp_dst_port);
 
-    // Packet reception tracking
+    // Packet tracking
     int low_entropy_received = 0, high_entropy_received = 0;
     struct timeval low_start, low_end, high_start, high_end, last_received_time, second_to_last_received_time;
     memset(&low_start, 0, sizeof(low_start));
@@ -154,20 +155,19 @@ double run_probing_phase(const Configuration *config) {
 
     while (low_entropy_received < config->udp_packet_count || high_entropy_received < config->udp_packet_count) {
         second_to_last_received_time = last_received_time;
-        int received_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, 
-                                      (struct sockaddr *)&client_addr, &addr_len);
+        int received_bytes = recvfrom(sock, buffer, sizeof(buffer), 0,
+                                    (struct sockaddr *)&client_addr, &addr_len);
 
         if (received_bytes > 0) {
-            
             gettimeofday(&last_received_time, NULL);
 
-            // Extract Packet ID (first 2 bytes of payload)
+            // Extract Packet ID
             int packet_id = (buffer[0] << 8) | buffer[1];
 
             // Check entropy level
             int is_high_entropy = 0;
             for (int i = 2; i < received_bytes; i++) {
-                if (buffer[i] != 0) {  // If any non-zero byte is found, it's high entropy
+                if (buffer[i] != 0) {
                     is_high_entropy = 1;
                     break;
                 }
@@ -180,11 +180,10 @@ double run_probing_phase(const Configuration *config) {
                 }
 
                 if (is_high_entropy) {
-                    printf("[DEBUG] WARNING: High entropy packet detected! Ending low-entropy train.\n");
-                    low_end = last_received_time;  // Record last low-entropy packet time
+                    printf("[DEBUG] High entropy packet detected early! Ending low entropy train.\n");
+                    low_end = last_received_time;
                     in_high_phase = 1;
-                    gettimeofday(&high_start, NULL);
-                    printf("[DEBUG] High entropy train STARTED at %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
+                    continue;  // Process this packet in high phase on next iteration
                 } else {
                     low_entropy_received++;
                     low_end = last_received_time;
@@ -193,62 +192,64 @@ double run_probing_phase(const Configuration *config) {
                 if (low_entropy_received == config->udp_packet_count) {
                     printf("[DEBUG] Low entropy train COMPLETE at %ld.%06ld\n", low_end.tv_sec, low_end.tv_usec);
                     in_high_phase = 1;
-                    gettimeofday(&high_start, NULL);
-                    printf("[DEBUG] High entropy train STARTED at %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
                 }
+
             } else {
-                if (high_entropy_received == 0) {
-                    gettimeofday(&high_start, NULL);
-                    printf("[DEBUG] High entropy train STARTED at %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
-                }
+                if (is_high_entropy) {
+                    if (high_entropy_received == 0) {
+                        gettimeofday(&high_start, NULL);
+                        printf("[DEBUG] High entropy train STARTED at %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
+                    }
 
-                high_entropy_received++;
-                high_end = last_received_time;
+                    high_entropy_received++;
+                    high_end = last_received_time;
 
-                if (high_entropy_received == config->udp_packet_count) {
-                    printf("[DEBUG] High entropy train COMPLETE at %ld.%06ld\n", high_end.tv_sec, high_end.tv_usec);
-                    break;
+                    if (high_entropy_received == config->udp_packet_count) {
+                        printf("[DEBUG] High entropy train COMPLETE at %ld.%06ld\n", high_end.tv_sec, high_end.tv_usec);
+                        break;
+                    }
+
+                } else {
+                    printf("[DEBUG] Ignoring low entropy packet during high entropy phase (Packet ID %d)\n", packet_id);
                 }
             }
 
-            printf("Received Packet ID %d from %s:%d (%d bytes) - Train %s (%d/%d low, %d/%d high)\n",
-                   packet_id, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port),
-                   received_bytes, 
-                   in_high_phase ? "HIGH" : "LOW",
-                   low_entropy_received, config->udp_packet_count,
-                   high_entropy_received, config->udp_packet_count);
+            // Optional: Debug log per packet
+            // printf("Received Packet ID %d from %s:%d (%d bytes) - Train %s (%d/%d low, %d/%d high)\n",
+            //        packet_id, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port),
+            //        received_bytes, in_high_phase ? "HIGH" : "LOW",
+            //        low_entropy_received, config->udp_packet_count,
+            //        high_entropy_received, config->udp_packet_count);
+
         } else {
             perror("[ERROR] recvfrom() failed or timeout reached.");
-            if(in_high_phase) {
+            if (in_high_phase) {
                 high_end = second_to_last_received_time;
                 break;
-            } 
-            else {
-                printf("Setting end of low last successful packet in low train.");
+            } else {
+                printf("Timeout during low train. Ending low entropy train.\n");
                 in_high_phase = 1;
                 low_end = second_to_last_received_time;
-                continue;
             }
         }
     }
 
     printf("[DEBUG] Probing phase complete! Received all packets or timed out.\n");
 
-    // Debugging: Print timestamps
+    // Debug timestamps
     printf("[DEBUG] Final Timestamps:\n");
     printf("  Low Start: %ld.%06ld\n", low_start.tv_sec, low_start.tv_usec);
     printf("  Low End: %ld.%06ld\n", low_end.tv_sec, low_end.tv_usec);
     printf("  High Start: %ld.%06ld\n", high_start.tv_sec, high_start.tv_usec);
     printf("  High End: %ld.%06ld\n", high_end.tv_sec, high_end.tv_usec);
 
-    // Calculate time differences
+    // Time diffs
     double low_entropy_time = (low_end.tv_sec - low_start.tv_sec) + (low_end.tv_usec - low_start.tv_usec) / 1.0e6;
     double high_entropy_time = (high_end.tv_sec - high_start.tv_sec) + (high_end.tv_usec - high_start.tv_usec) / 1.0e6;
 
     printf("Low entropy packet train duration: %.6f seconds\n", low_entropy_time);
     printf("High entropy packet train duration: %.6f seconds\n", high_entropy_time);
 
-    // Compute and return the difference between high and low entropy train durations
     double time_difference = high_entropy_time - low_entropy_time;
 
     close(sock);
@@ -258,15 +259,75 @@ double run_probing_phase(const Configuration *config) {
 /**
  *
  */
-void run_postprobing_phase(const double time_delta) {
+void run_postprobing_phase(const Configuration *config, const double time_delta) {
+
     printf("Difference between High and Low entropy durations: %.6f seconds\n", time_delta);
 
-    if(time_delta > MAX_ARRIVAL_TIME_DELTA) {
-        printf("Will communicate back to client that compression was detected.\n");
+    const char *result_msg;
+    if (time_delta > MAX_ARRIVAL_TIME_DELTA) {
+        result_msg = "Compression detected!";
+    } else {
+        result_msg = "No compression detected.";
     }
-    else {
-        printf("Will communicate back to client that no compression was detected.\n");
+
+    printf("Result: %s\n", result_msg);
+    printf("Waiting for client TCP post-probing connection on port %d...\n", config->tcp_post_probe);
+
+    int server_sock = -1, client_sock = -1;
+
+    // Create TCP socket
+    if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("Post-Probing Socket creation failed");
+        exit(EXIT_FAILURE);
     }
+
+    // Allow port reuse
+    int opt = 1;
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+        perror("setsockopt SO_REUSEADDR failed");
+        close(server_sock);
+        exit(EXIT_FAILURE);
+    }
+
+    // Setup address
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(config->tcp_post_probe);
+
+    if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+        perror("Post-Probing Bind failed");
+        close(server_sock);
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_sock, 1) == -1) {
+        perror("Post-Probing Listen failed");
+        close(server_sock);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len)) == -1) {
+        perror("Post-Probing Accept failed");
+        close(server_sock);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Client connected for post-probing on port %d.\n", config->tcp_post_probe);
+
+    // Send result message to client
+    if (send(client_sock, result_msg, strlen(result_msg), 0) == -1) {
+        perror("Failed to send result to client");
+    } else {
+        printf("Sent result to client: %s\n", result_msg);
+    }
+
+    // Cleanup
+    close(client_sock);
+    close(server_sock);
+
 }
 
 
@@ -297,7 +358,7 @@ int main(const int argc, char *argv[]) {
     double delta = run_probing_phase(&configuration);
 
     // post-probing phase will allow the server calculate compression detection and communicate that back to the client
-    run_postprobing_phase(delta);
+    run_postprobing_phase(&configuration, delta);
 
     // end server process
     return EXIT_SUCCESS;
