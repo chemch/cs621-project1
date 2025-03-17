@@ -8,6 +8,7 @@
  * @return configuration struct resulting from parsing
  */
 Configuration run_preprobing_phase(const char *config_file) {
+    fprintf(stderr, "\t***PRE-PROBE PHASE STARTED***\n");
 
     // read the provided configuration file
     fprintf(stderr, "CONFIG FILE: %s\n\n", config_file);
@@ -19,11 +20,15 @@ Configuration run_preprobing_phase(const char *config_file) {
         exit(EXIT_FAILURE);
     }
 
-    // print configuration for validation
-    print_configuration(&configuration);
+    // print configuration for validation if in debug mode
+    if (configuration.debug_mode) {
+        print_configuration(&configuration);
+    }
 
     // send the configuration to the server
     forward_configuration_to_server(&configuration);
+
+    fprintf(stderr, "\t***PRE-PROBE PHASE COMPLETED SUCCESSFULLY!***\n\n");
 
     return configuration;
 }
@@ -33,6 +38,7 @@ Configuration run_preprobing_phase(const char *config_file) {
  * @param config to use for generating udp packet trains
  */
 void run_probing_phase(const Configuration *config) {
+    fprintf(stderr, "\t***PROBE PHASE STARTED***\n");
 
     // sleep for a few seconds before starting the probing phase
     printf("SLEEPING %d SECONDS PRIOR TO LOW ETROPY TRAIN...\n", PROBING_PHASE_DELAY);
@@ -61,7 +67,7 @@ void run_probing_phase(const Configuration *config) {
         1, 
         config->debug_mode);
 
-    printf("PROBING PHASE COMPLETED SUCCESFULLY.\n");
+    fprintf(stderr, "\t***PROBE PHASE COMPLETED SUCCESSFULLY!***\n\n");
 }
 
 /**
@@ -70,7 +76,8 @@ void run_probing_phase(const Configuration *config) {
  * @param config to use for generating udp packet trains
  */
 void run_postprobing_phase(const Configuration *config) {
-    printf("SLEEPING %d SECONDS BEFORE POST PROBE PHASE...\n", config->inter_measure_time * 2);
+    fprintf(stderr, "\t***POST-PROBE PHASE STARTED***\n");
+    printf("SLEEPING %d SECONDS BEFORE POST PROBE PHASE TRANSMISSION...\n", config->inter_measure_time * 2);
 
     // sleep for the specified phase transition time
     sleep(config->inter_measure_time * 2);
@@ -111,6 +118,8 @@ void run_postprobing_phase(const Configuration *config) {
     printf("%s\n", buffer);
 
     close(sock);
+
+    fprintf(stderr, "\t***POST-PROBE PHASE COMPLETED SUCCESSFULLY!***\n\n");
 }
 
 /*

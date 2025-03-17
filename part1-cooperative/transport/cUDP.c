@@ -30,7 +30,7 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
     src_addr.sin_addr.s_addr = inet_addr(client_ip); 
 
     if (bind(sock, (struct sockaddr *)&src_addr, sizeof(src_addr)) == -1) {
-        perror("[ERROR] Binding source port failed");
+        perror("FAILED TO SOURCE PORT.");
         close(sock);
         exit(EXIT_FAILURE);
     }
@@ -71,8 +71,11 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
                    (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
             perror("FAILED TO SEND PACKET. ");
         } else {
-            printf("PACKET ID %d SENT TO %s:%d (%d BYTES)\n",
-                   i, server_ip, dst_port, packet_size);
+            // print out verbose logs if debug mode is enabled
+            if (debug_mode) {
+                printf("DEBUG MODE - PACKET ID %d SENT TO %s:%d (%d BYTES)\n",
+                       i, server_ip, dst_port, packet_size);
+            }
         }
     }
 

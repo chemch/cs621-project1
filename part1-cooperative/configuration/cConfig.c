@@ -104,7 +104,6 @@ Configuration read_configuration(const char *configuration_file) {
 }
 
 
-// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**
  *
  * @param json to convert
@@ -179,7 +178,8 @@ int json_to_configuration(cJSON *json, Configuration *config) {
  * @param config
  */
 void print_configuration(const Configuration *config) {
-    printf("CONFIGURATION SETTINGS:\n");
+    printf("\n******\n");
+    printf("CONFIGURATION FILE SETTINGS:\n");
     printf("CLIENT IP: %s\n", config->client_ip);
     printf("SERVER IP: %s\n", config->server_ip);
     printf("UDP SOURCE PORT: %d\n", config->udp_src_port);
@@ -193,7 +193,7 @@ void print_configuration(const Configuration *config) {
     printf("NUMBER OF UDP PACKETS: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
     printf("DEBUG MODE: %s\n", config->debug_mode ? "ENABLED" : "DISABLED");
-    printf("CONFIGURATION FILE LOADED SUCCESSFULLY.\n");
+    printf("\n******\n");
 }
 
 /**

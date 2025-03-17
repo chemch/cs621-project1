@@ -2,7 +2,6 @@
 #define COMPDETECT_H
 
 // required external dependencies
-// ReSharper disable CppUnusedIncludeDirective
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

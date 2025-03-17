@@ -1,5 +1,5 @@
-#ifndef UDP_H
-#define UDP_H
+#ifndef C_UDP_H
+#define C_UDP_H
 
 #include "app/compdetect.h"
 
