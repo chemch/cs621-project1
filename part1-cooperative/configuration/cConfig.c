@@ -193,7 +193,7 @@ void print_configuration(const Configuration *config) {
     printf("NUMBER OF UDP PACKETS: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
     printf("DEBUG MODE: %s\n", config->debug_mode ? "ENABLED" : "DISABLED");
-    printf("\n******\n");
+    printf("******\n");
 }
 
 /**

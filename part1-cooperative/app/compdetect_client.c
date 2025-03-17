@@ -1,6 +1,6 @@
 #include "compdetect.h"
 
-#define PROBING_PHASE_DELAY 2
+#define PROBING_PHASE_DELAY 5
 
 /**
  *

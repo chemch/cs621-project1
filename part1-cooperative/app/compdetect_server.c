@@ -14,6 +14,7 @@
  *        a Configuration struct.
  */
 Configuration run_preprobing_phase(int port) {
+    fprintf(stderr, "\t***PRE-PROBING PHASE STARTED***\n");
 
     // define socket parameters for the client and server
     int server_sock, client_sock;
@@ -46,7 +47,7 @@ Configuration run_preprobing_phase(int port) {
         exit(EXIT_FAILURE);
     }
 
-    printf("LISTENING ON SERVER PORT %d...\n", port);
+    printf("LISTENING ON SERVER (DESTINATION) PORT %d...\n", port);
 
     // accept incoming client connection
     if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len)) == -1) {
@@ -54,7 +55,7 @@ Configuration run_preprobing_phase(int port) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "CLIENT CONNECTED ON PORT %d\n", ntohs(client_addr.sin_port));
+    fprintf(stderr, "CLIENT CONNECTED FROM SOURCE PORT %d\n", ntohs(client_addr.sin_port));
 
     // receive json data from client
     const int received_bytes = recv(client_sock, buffer, DEF_BUFFER_SIZE - 1, 0);
@@ -100,6 +101,8 @@ Configuration run_preprobing_phase(int port) {
     close(client_sock);
     close(server_sock);
 
+    fprintf(stderr, "\t***PRE-PROBE PHASE COMPLETED SUCCESSFULLY***\n");
+
     return config;
 }
 
@@ -107,9 +110,7 @@ Configuration run_preprobing_phase(int port) {
  *
  */
 double run_probing_phase(const Configuration *config) {
-    printf("RUNNING PROBING PHASE.\n");
-    printf("UDP DESTINATION PORT SET TO %d\n", config->udp_dst_port);
-    printf("INTER-MEASUREMENT TIME SET TO: %d SECONDS.\n", config->inter_measure_time);
+    fprintf(stderr, "\t***PROBING PHASE STARTED***\n");
 
     int sock;
     struct sockaddr_in server_addr, client_addr;
@@ -263,6 +264,9 @@ double run_probing_phase(const Configuration *config) {
     double time_difference = high_entropy_time - low_entropy_time;
 
     close(sock);
+    
+    printf("PROBING PHASE COMPLETED SUCCESSFULLY.\n");
+
     return time_difference;
 }
 
@@ -270,6 +274,7 @@ double run_probing_phase(const Configuration *config) {
  *
  */
 void run_postprobing_phase(const Configuration *config, const double time_delta) {
+    fprintf(stderr, "\t***POST-PROBE PHASE STARTED***\n");
 
     printf("DELTA BETWEEN LOW AND HIGH ENTROPY TRAIN DURATIONS: %.6f SECONDS\n", time_delta);
 
@@ -338,6 +343,7 @@ void run_postprobing_phase(const Configuration *config, const double time_delta)
     close(client_sock);
     close(server_sock);
 
+    fprintf(stderr, "\t***POST-PROBE PHASE COMPLETED SUCCESSFULLY***\n");
 }
 
 
