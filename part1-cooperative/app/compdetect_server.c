@@ -90,9 +90,6 @@ Configuration run_preprobing_phase(int port) {
         exit(EXIT_FAILURE);
     }
 
-    // print the configuration parsed from client
-    print_configuration(&config);
-
     // free the memory allocated for the json object
     cJSON_Delete(json);
 
@@ -110,7 +107,7 @@ Configuration run_preprobing_phase(int port) {
  *
  */
 double run_probing_phase(const Configuration *config) {
-    fprintf(stderr, "\t***PROBING PHASE STARTED***\n");
+    fprintf(stderr, "\n\t***PROBING PHASE STARTED***\n");
 
     int sock;
     struct sockaddr_in server_addr, client_addr;
@@ -123,7 +120,9 @@ double run_probing_phase(const Configuration *config) {
         exit(EXIT_FAILURE);
     }
 
-    printf("UDP SOCKET SET UP SUCCESSFULLY.\n");
+    if(config->debug_mode) {
+        printf("DEBUG MODE - UDP SOCKET SET UP SUCCESSFULLY.\n");
+    }
 
     // Increase socket receive buffer size
     int rcvbuf_size = MAX_UDP_BUFFER;
@@ -150,8 +149,6 @@ double run_probing_phase(const Configuration *config) {
         close(sock);
         exit(EXIT_FAILURE);
     }
-
-    printf("SERVER BOUND TO UDP PORT %d.\n", config->udp_dst_port);
 
     // Packet tracking
     int low_entropy_received = 0, high_entropy_received = 0;
@@ -265,7 +262,7 @@ double run_probing_phase(const Configuration *config) {
 
     close(sock);
     
-    printf("PROBING PHASE COMPLETED SUCCESSFULLY.\n");
+    fprintf(stderr, "\t***PROBING PHASE COMPLETED SUCCESSFULLY***\n");
 
     return time_difference;
 }
@@ -274,7 +271,7 @@ double run_probing_phase(const Configuration *config) {
  *
  */
 void run_postprobing_phase(const Configuration *config, const double time_delta) {
-    fprintf(stderr, "\t***POST-PROBE PHASE STARTED***\n");
+    fprintf(stderr, "\n\t***POST-PROBING PHASE STARTED***\n");
 
     printf("DELTA BETWEEN LOW AND HIGH ENTROPY TRAIN DURATIONS: %.6f SECONDS\n", time_delta);
 
