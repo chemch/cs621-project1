@@ -20,7 +20,7 @@
 #include "configuration/cConfig.h"
 #include "transport/cUDP.h"
 
-// application defaults (per project 1 instructions)
+// application defaults (per project 1 pdf instructions)
 #define DEF_UDP_SRC_PORT 9876
 #define DEF_UDP_DST_PORT 8765
 #define DEF_TCP_SYN_X 9999

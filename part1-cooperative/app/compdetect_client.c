@@ -91,6 +91,7 @@ void run_postprobing_phase(const Configuration *config) {
     server_addr.sin_port = htons(config->tcp_post_probe);
     inet_pton(AF_INET, config->server_ip, &server_addr.sin_addr);
 
+    // connect to server socket
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("FAILED TO CONNECT TO SERVER.");
         close(sock);

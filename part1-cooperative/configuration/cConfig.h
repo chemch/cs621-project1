@@ -1,5 +1,5 @@
-#ifndef COMPDETECT_CONFIG_H
-#define COMPDETECT_CONFIG_H
+#ifndef C_CONFIG_H
+#define C_CONFIG_H
 
 #include "app/compdetect.h"
 
@@ -26,4 +26,4 @@ void forward_configuration_to_server(Configuration *configuration);
 int json_to_configuration(cJSON *json, Configuration *config);
 char *convert_configuration_to_json(Configuration *config);
 
-#endif // COMPDETECT_CONFIG_H
+#endif

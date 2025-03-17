@@ -28,7 +28,7 @@ Configuration read_configuration(const char *configuration_file) {
 
     // input parameter checking: make sure the file can be opened
     if (!raw_file) {
-        perror("Error opening configuration file");
+        perror("FAILED TO OPEN CONFIGURATION FILE.");
         exit(EXIT_FAILURE);
     }
 
@@ -45,12 +45,12 @@ Configuration read_configuration(const char *configuration_file) {
     // close the handle to the raw input file
     fclose(raw_file);
 
-    // parse the json file into a cJSON object
+    // parse the json file into a json object
     cJSON *json = cJSON_Parse(json_file);
 
     // validate that the json has been properly parsed to avoid errors later
     if (!json) {
-        perror("Unable to parse the provided JSON. Check the Configuration file.");
+        perror("UNABLE TO PARSE JSON CONFIG FILE. CHECK THE FILE.");
         exit(EXIT_FAILURE);
     }
 
@@ -109,7 +109,7 @@ Configuration read_configuration(const char *configuration_file) {
  *
  * @param json to convert
  * @param config resulting from conversion
- * @return
+ * @return confirmation of success
  */
 int json_to_configuration(cJSON *json, Configuration *config) {
     // input parameter checking, make sure valid config and json
@@ -179,22 +179,21 @@ int json_to_configuration(cJSON *json, Configuration *config) {
  * @param config
  */
 void print_configuration(const Configuration *config) {
-    printf("Configuration Settings:\n");
-    printf("Client IP: %s\n", config->client_ip);
-    printf("Server IP: %s\n", config->server_ip);
-    printf("UDP Source Port: %d\n", config->udp_src_port);
-    printf("UDP Destination Port: %d\n", config->udp_dst_port);
-    printf("TCP SYN X Port: %d\n", config->tcp_syn_x);
-    printf("TCP SYN Y Port: %d\n", config->tcp_syn_y);
-    printf("TCP Pre-Probe Port: %d\n", config->tcp_pre_probe);
-    printf("TCP Post-Probe Port: %d\n", config->tcp_post_probe);
-    printf("UDP Payload Size: %dB\n", config->udp_payload_size);
-    printf("Inter-Measurement Time: %d seconds\n", config->inter_measure_time);
-    printf("Number of UDP Packets: %d\n", config->udp_packet_count);
+    printf("CONFIGURATION SETTINGS:\n");
+    printf("CLIENT IP: %s\n", config->client_ip);
+    printf("SERVER IP: %s\n", config->server_ip);
+    printf("UDP SOURCE PORT: %d\n", config->udp_src_port);
+    printf("UDP DESTINATION PORT: %d\n", config->udp_dst_port);
+    printf("TCP SYN X PORT: %d\n", config->tcp_syn_x);
+    printf("TCP SYN Y PORT: %d\n", config->tcp_syn_y);
+    printf("TCP PRE-PROBE PORT: %d\n", config->tcp_pre_probe);
+    printf("TCP POST-PROBE PORT: %d\n", config->tcp_post_probe);
+    printf("UDP PAYLOAD SIZE: %dB\n", config->udp_payload_size);
+    printf("INTER-MEASUREMENT TIME: %d SECONDS\n", config->inter_measure_time);
+    printf("NUMBER OF UDP PACKETS: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
-    printf("Debug Mode: %s\n", config->debug_mode ? "Enabled" : "Disabled");
-    printf("Configuration file loaded successfully.\n");
-    printf("\n");
+    printf("DEBUG MODE: %s\n", config->debug_mode ? "ENABLED" : "DISABLED");
+    printf("CONFIGURATION FILE LOADED SUCCESSFULLY.\n");
 }
 
 /**
@@ -233,10 +232,10 @@ char *convert_configuration_to_json(Configuration *config) {
     cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
     cJSON_AddNumberToObject(json_obj, "DebugMode", config->debug_mode);
 
-    // Convert JSON object to string
+    // Convert json object to string
     char *json_string = cJSON_PrintUnformatted(json_obj);
 
-    // Free the JSON object
+    // Free the json object
     cJSON_Delete(json_obj);
 
     return json_string;
@@ -253,7 +252,7 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // create tcp socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Error: Failed to create socket");
+        perror("FAILED TO CREATE SOCKET.");
         exit(EXIT_FAILURE);
     }
 
@@ -263,14 +262,14 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // set the server ip and validate
     if (inet_pton(AF_INET, configuration->server_ip, &server_addr.sin_addr) != 1) {
-        perror("Error: Invalid Server IP Address");
+        perror("INVALID SERVER IP ADDRESS.");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
     // initiate connection to server using ip and port
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Error: Failed to connect to server");
+        perror("FAILED TO CONNECT TO SERVER.");
         close(sock);
         exit(EXIT_FAILURE);
     }
@@ -280,20 +279,20 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // validate that the json was created successfully
     if (!json_data) {
-        perror("Error: Failed to convert configuration to JSON");
+        perror("FAILED TO CONVERT JSON CONFIGURATION DATA.");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
     // forward JSON configuration using the socket
     if (send(sock, json_data, strlen(json_data), 0) == -1) {
-        perror("Error: Failed to Forward the Configuration to Server. Check the socket settings");
+        perror("FAILED TO FORWARD THE CONFIGURATION TO SERVER.");
         free(json_data);
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    printf("Successfully sent Config to %s:%d \n", configuration->server_ip, configuration->tcp_pre_probe);
+    printf("CONFIG SENT SUCCESSFULLY TO %s:%d \n", configuration->server_ip, configuration->tcp_pre_probe);
 
     // release unneeded handles
     free(json_data);
