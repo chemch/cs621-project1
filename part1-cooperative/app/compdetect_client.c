@@ -1,25 +1,28 @@
 #include "compdetect.h"
 
+#define PROBING_PHASE_DELAY 2
+
 /**
  *
  * @param config_file to parse
  * @return configuration struct resulting from parsing
  */
 Configuration run_preprobing_phase(const char *config_file) {
+
     // read the provided configuration file
-    fprintf(stderr, "Configuration File: %s\n\n", config_file);
+    fprintf(stderr, "CONFIG FILE: %s\n\n", config_file);
     Configuration configuration = read_configuration(config_file);
 
-    // Validate that server IP and port are valid
+    // validate that server ip address and port are valid
     if (configuration.server_ip[0] == '\0' || configuration.tcp_pre_probe <= 0) {
-        fprintf(stderr, "Error: Invalid Server Configuration Read from Config\n");
+        fprintf(stderr, "INVALID SERVER CONFIGURATION FILE PROVIDED.\n");
         exit(EXIT_FAILURE);
     }
 
-    // Print configuration for validation
+    // print configuration for validation
     print_configuration(&configuration);
 
-    // Send the configuration to the server
+    // send the configuration to the server
     forward_configuration_to_server(&configuration);
 
     return configuration;
@@ -30,80 +33,100 @@ Configuration run_preprobing_phase(const char *config_file) {
  * @param config to use for generating udp packet trains
  */
 void run_probing_phase(const Configuration *config) {
-    printf("Waiting for %d seconds before probing...\n", 2);
 
-    // sleep for the specified phase transition time
-    sleep(2);
+    // sleep for a few seconds before starting the probing phase
+    printf("SLEEPING %d SECONDS PRIOR TO LOW ETROPY TRAIN...\n", PROBING_PHASE_DELAY);
+    sleep(PROBING_PHASE_DELAY);
 
-    printf("Running Probing Phase...\n");
-    send_udp_packets(config->client_ip, config->server_ip, config->udp_src_port, config->udp_dst_port,
-                     config->udp_packet_count, config->udp_payload_size, 0);
+    transmit_udp_train(config->client_ip, 
+        config->server_ip, 
+        config->udp_src_port, 
+        config->udp_dst_port,               
+        config->udp_packet_count, 
+        config->udp_payload_size, 
+        0, 
+        config->debug_mode);
 
-    printf("Waiting for %d seconds before high entropy transmission...\n", config->inter_measure_time);
+    // sleep for the specified inter-measure time before sending the high entropy train
+    printf("SLEEPING %d SECONDS PRIOR TO HIGH ENTROPY TRAIN...\n", config->inter_measure_time);
     sleep(config->inter_measure_time);
 
-    send_udp_packets(config->client_ip, config->server_ip, config->udp_src_port, config->udp_dst_port,
-                     config->udp_packet_count, config->udp_payload_size, 1);
-}
+    transmit_udp_train(
+        config->client_ip, 
+        config->server_ip, 
+        config->udp_src_port, 
+        config->udp_dst_port,         
+        config->udp_packet_count, 
+        config->udp_payload_size, 
+        1, 
+        config->debug_mode);
 
+    printf("PROBING PHASE COMPLETED SUCCESFULLY.\n");
+}
 
 /**
  * receive calculated result back from server whether compression was detected, then print
+ * 
+ * @param config to use for generating udp packet trains
  */
 void run_postprobing_phase(const Configuration *config) {
-    printf("Waiting for %f seconds before postprobing...\n", config->inter_measure_time * 1.2);
+    printf("SLEEPING %f SECONDS BEFORE POST PROBE PHASE...\n", config->inter_measure_time * 2);
 
     // sleep for the specified phase transition time
-    sleep(config->inter_measure_time);
+    sleep(config->inter_measure_time * 2);
 
+    // create a socket for post-probing
     int sock;
     struct sockaddr_in server_addr;
     char buffer[256];
 
+    // create tcp socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Post-Probing TCP socket creation failed");
+        perror("FAILED TO CEATE POST-PROBE SOCKET.");
         exit(EXIT_FAILURE);
     }
 
+    // set up server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(config->tcp_post_probe);
     inet_pton(AF_INET, config->server_ip, &server_addr.sin_addr);
 
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Post-Probing TCP connection failed");
+        perror("FAILED TO CONNECT TO SERVER.");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    // Receive result
+    // receive results from calculation of server
     int received_bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (received_bytes <= 0) {
-        perror("Failed to receive result from server");
+        perror("FAILED TO GET RESULTS OF CALCULATION FROM SERVER.");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    buffer[received_bytes] = '\0';  // Null-terminate the received string
-    printf("Server Result: %s\n", buffer);
+    // null-terminate the received data and print answer to part 1 task
+    buffer[received_bytes] = '\0'; 
+    printf("%s\n", buffer);
 
     close(sock);
 }
 
 /*
- * PART 1 - Client Side: Compression Detection Client/Server Application
+ * client side of part 1 (cooperative) of the project to determine if compression is detected
 */
 int main(const int argc, char *argv[]) {
 
     // perform input parameter check
     if (argc != 2) {
-        fprintf(stderr, "Correct Usage: %s <configuration.json>\n", argv[0]);
+        fprintf(stderr, "CORRECT USAGE: %s <CONFIG.JSON>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    // pre-probing phase: Read configuration and send to server
+    // pre-probing phase: read configuration and send to server
     const Configuration configuration = run_preprobing_phase(argv[1]);
 
-    // probing phase: Send 2 UDP packet trains to server, one with high entropy and another with low
+    // probing phase: send 2 udp packet trains to server, one with high entropy and another with low
     run_probing_phase(&configuration);
 
     // post-probing phase: receive results back from server on compression calc results and print

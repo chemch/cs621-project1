@@ -19,7 +19,8 @@ Configuration read_configuration(const char *configuration_file) {
         .udp_payload_size = DEF_UDP_PAYLOAD_SIZE,
         .inter_measure_time = DEF_INTER_MEASURE_TIME,
         .udp_packet_count = DEF_UDP_PACKET_COUNT,
-        .ttl = DEF_UDP_TTL
+        .ttl = DEF_UDP_TTL,
+        .debug_mode = 0
     };
 
     // create file stream to read from the input configuration
@@ -92,6 +93,9 @@ Configuration read_configuration(const char *configuration_file) {
     if ((json_item = cJSON_GetObjectItem(json, "TTL")))
         configuration.ttl = json_item->valueint;
 
+    if ((json_item = cJSON_GetObjectItem(json, "DebugMode")))
+    configuration.debug_mode = json_item->valueint;
+
     // free the memory allocated for the json file
     cJSON_Delete(json);
     free(json_file);
@@ -161,6 +165,10 @@ int json_to_configuration(cJSON *json, Configuration *config) {
         config->ttl = item->valueint;
     }
 
+    if (((item = cJSON_GetObjectItem(json, "DebugMode"))) && cJSON_IsNumber(item)) {
+        config->debug_mode = item->valueint;
+    }
+
     return 1;
 }
 
@@ -184,6 +192,8 @@ void print_configuration(const Configuration *config) {
     printf("Inter-Measurement Time: %d seconds\n", config->inter_measure_time);
     printf("Number of UDP Packets: %d\n", config->udp_packet_count);
     printf("UDP TTL: %d\n", config->ttl);
+    printf("Debug Mode: %s\n", config->debug_mode ? "Enabled" : "Disabled");
+    printf("Configuration file loaded successfully.\n");
     printf("\n");
 }
 
@@ -221,6 +231,7 @@ char *convert_configuration_to_json(Configuration *config) {
     cJSON_AddNumberToObject(json_obj, "InterMeasureTime", config->inter_measure_time);
     cJSON_AddNumberToObject(json_obj, "UDPPacketCount", config->udp_packet_count);
     cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
+    cJSON_AddNumberToObject(json_obj, "DebugMode", config->debug_mode);
 
     // Convert JSON object to string
     char *json_string = cJSON_PrintUnformatted(json_obj);

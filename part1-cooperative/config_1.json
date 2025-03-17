@@ -14,5 +14,7 @@
 
   "TCPSYNX": 9990,
   "TCPSYNY": 8888,
-  "UDPTTL": 255
+  "UDPTTL": 255,
+
+  "DebugMode": 0
 }

@@ -17,6 +17,7 @@ typedef struct {
     int inter_measure_time;
     int udp_packet_count;
     int ttl;
+    int debug_mode;
 } Configuration;
 
 Configuration read_configuration(const char *configuration_file);

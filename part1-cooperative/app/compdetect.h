@@ -10,9 +10,9 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/time.h>
-#include <netinet/ip.h>     // Provides struct iphdr
+#include <netinet/ip.h>     
 #include <netinet/in.h>
-#include <netinet/udp.h>    // Provides struct udphdr
+#include <netinet/udp.h>    
 #include <time.h>
 
 // required local dependencies
@@ -35,4 +35,4 @@
 // buffer size for communication between client and server
 #define DEF_BUFFER_SIZE 4096
 
-#endif //COMPDETECT_H
+#endif 
