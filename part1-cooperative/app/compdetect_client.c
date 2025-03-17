@@ -70,7 +70,7 @@ void run_probing_phase(const Configuration *config) {
  * @param config to use for generating udp packet trains
  */
 void run_postprobing_phase(const Configuration *config) {
-    printf("SLEEPING %f SECONDS BEFORE POST PROBE PHASE...\n", config->inter_measure_time * 2);
+    printf("SLEEPING %d SECONDS BEFORE POST PROBE PHASE...\n", config->inter_measure_time * 2);
 
     // sleep for the specified phase transition time
     sleep(config->inter_measure_time * 2);
