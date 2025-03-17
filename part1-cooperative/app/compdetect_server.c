@@ -188,7 +188,7 @@ double run_probing_phase(const Configuration *config) {
 
                 if (is_high_entropy) {
                     printf("ENDING LOW ENTROPY TRAIN BECAUSE A HIGH ENTROPY PACKET WAS DETECTED EARLY.\n");
-                    low_end = last_received_time;
+                    low_end = second_to_last_received_time;
                     in_high_phase = 1;
                     continue; 
                 } else {
