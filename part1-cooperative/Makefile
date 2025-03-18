@@ -7,8 +7,8 @@ BIN_DIR = bin
 BUILD_DIR = build
 
 # source files
-SRC_CLIENT = app/compdetect_client.c json/cJSON.c configuration/cConfig.c transport/cUDP.c
-SRC_SERVER = app/compdetect_server.c json/cJSON.c configuration/cConfig.c
+SRC_CLIENT = app/compdetect_client.c json/cJSON.c configuration/cConfig.c transport/cTCP.c transport/cUDP.c
+SRC_SERVER = app/compdetect_server.c json/cJSON.c configuration/cConfig.c transport/cTCP.c
 
 # object file definitions (stored in build/)
 OBJ_CLIENT = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_CLIENT))

@@ -16,90 +16,44 @@
 Configuration run_preprobing_phase(int port) {
     fprintf(stderr, "\t***PRE-PROBING PHASE STARTED***\n");
 
-    // define socket parameters for the client and server
-    int server_sock, client_sock;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
+    int server_sock = create_tcp_server_socket(port);
+    struct sockaddr_in client_addr;
 
-    // define buffer for receiving data from the client
+    printf("WAITING FOR CLIENT ON PORT %d...\n", port);
+    int client_sock = accept_tcp_client(server_sock, &client_addr);
+    printf("CLIENT CONNECTED FROM PORT %d.\n", ntohs(client_addr.sin_port));
+
     char buffer[DEF_BUFFER_SIZE];
-
-    // create new tcp socket
-    if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("FAILED TO CREATE SERVER SOCKET.");
-        exit(EXIT_FAILURE);
-    }
-
-    // server socket settings
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);
-
-    // try to bind the server to the socket
-    if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("FAILED TO BIND SERVER SOCKET.");
-        exit(EXIT_FAILURE);
-    }
-
-    // wait for incoming connection
-    if (listen(server_sock, 5) == -1) {
-        perror("FAILED TO LISTEN ON SERVER SOCKET.");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("LISTENING ON SERVER (DESTINATION) PORT %d...\n", port);
-
-    // accept incoming client connection
-    if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len)) == -1) {
-        perror("FAILED TO ACCEPT CLIENT CONNECTION.");
-        exit(EXIT_FAILURE);
-    }
-
-    fprintf(stderr, "CLIENT CONNECTED FROM SOURCE PORT %d\n", ntohs(client_addr.sin_port));
-
-    // receive json data from client
-    const int received_bytes = recv(client_sock, buffer, DEF_BUFFER_SIZE - 1, 0);
+    int received_bytes = recv_data(client_sock, buffer, DEF_BUFFER_SIZE - 1);
     if (received_bytes <= 0) {
-        perror("FAILED TO RECEIVE DATA FROM CLIENT.");
-        close(client_sock);
-        close(server_sock);
+        fprintf(stderr, "FAILED TO RECEIVE CONFIGURATION.\n");
+        close_tcp_connection(client_sock);
+        close_tcp_connection(server_sock);
         exit(EXIT_FAILURE);
     }
-
-    // terminate the string
     buffer[received_bytes] = '\0';
 
-    printf("SUCCESSFULLY RECEIVED CONFIGURATION FROM CLIENT...\n");
-
-    // parse the JSON
     cJSON *json = cJSON_Parse(buffer);
-
-    // validate that the json was parsed successfully
     if (!json) {
-        fprintf(stderr, "UNABLE TO PARSE JSON!!\n");
+        fprintf(stderr, "JSON PARSE ERROR.\n");
+        close_tcp_connection(client_sock);
+        close_tcp_connection(server_sock);
         exit(EXIT_FAILURE);
     }
 
-    // convert json object to Configuration struct
     Configuration config;
     if (!json_to_configuration(json, &config)) {
-        fprintf(stderr, "FAILED TO CONVERT JSON TO VALID CONFIG OBJECT...\n");
+        fprintf(stderr, "CONFIGURATION CONVERSION FAILED.\n");
         cJSON_Delete(json);
-        close(client_sock);
-        close(server_sock);
+        close_tcp_connection(client_sock);
+        close_tcp_connection(server_sock);
         exit(EXIT_FAILURE);
     }
 
-    // free the memory allocated for the json object
     cJSON_Delete(json);
-
-    // close the handles to the client and server sockets
-    shutdown(client_sock, SHUT_RDWR);  // Disables further sends/receives
-    close(client_sock);
-    close(server_sock);
-
-    fprintf(stderr, "\t***PRE-PROBE PHASE COMPLETED SUCCESSFULLY***\n");
-
+    close_tcp_connection(client_sock);
+    close_tcp_connection(server_sock);
+    fprintf(stderr, "\t***PRE-PROBING PHASE COMPLETED***\n");
     return config;
 }
 
@@ -290,79 +244,26 @@ double run_probing_phase(const Configuration *config) {
  *      entropy trains.
  * @note The result message is sent to the client via a TCP connection.
  */
-void run_postprobing_phase(const Configuration *config, const double time_delta) {
+void run_postprobing_phase(const Configuration *config, double time_delta) {
     fprintf(stderr, "\n\t***POST-PROBING PHASE STARTED***\n");
 
-    printf("DELTA BETWEEN LOW AND HIGH ENTROPY TRAIN DURATIONS: %.6f SECONDS\n", time_delta);
+    const char *result_msg = time_delta > MAX_ARRIVAL_TIME_DELTA ? 
+                             "Compression detected!" : 
+                             "No compression detected.";
+    printf("RESULT: %s\n", result_msg);
 
-    // determine if compression was detected based on the time delta
-    const char *result_msg;
-    if (time_delta > MAX_ARRIVAL_TIME_DELTA) {
-        result_msg = "Compression detected!";
-    } else {
-        result_msg = "No compression detected.";
-    }
+    int server_sock = create_tcp_server_socket(config->tcp_post_probe);
+    struct sockaddr_in client_addr;
 
-    printf("WAITING FOR CLIENT ON TCP PORT: %d...\n", config->tcp_post_probe);
-    int server_sock = -1, client_sock = -1;
+    printf("WAITING FOR CLIENT ON PORT %d...\n", config->tcp_post_probe);
+    int client_sock = accept_tcp_client(server_sock, &client_addr);
 
-    // create tcp socket
-    if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("POST-PROBE SOCKET CREATION FAILED.");
-        exit(EXIT_FAILURE);
-    }
+    send_data(client_sock, result_msg, strlen(result_msg));
+    printf("RESULT SENT TO CLIENT.\n");
 
-    // to prevent failures on bind due to address already in use
-    int opt = 1;
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        perror("SETSOCKOPT REUSE ALLOWANCE FAILED.");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
-
-    // set tcp server address and port
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(config->tcp_post_probe);
-
-    // bind the server to the socket
-    if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("POST PROBING PHASE BIND FAILED.");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
-
-    // listen for incoming connections from client
-    if (listen(server_sock, 1) == -1) {
-        perror("POST PROBING PHASE LISTEN FAILED.");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
-
-    // accept client connection
-    if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len)) == -1) {
-        perror("POST PROBING PHASE ACCEPT FAILED.");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("CLIENT CONNECTED ON TCP PORT: %d.\n", config->tcp_post_probe);
-
-    // send the final result message to client
-    if (send(client_sock, result_msg, strlen(result_msg), 0) == -1) {
-        perror("UNABLE TO SEND RESULT TO CLIENT.");
-    } else {
-        printf("FINAL RESULT SENT TO CLIENT SUCCESSFULLY: %s\n", result_msg);
-    }
-
-    // close the client and server sockets
-    close(client_sock);
-    close(server_sock);
-
-    fprintf(stderr, "\t***POST-PROBE PHASE COMPLETED SUCCESSFULLY***\n");
+    close_tcp_connection(client_sock);
+    close_tcp_connection(server_sock);
+    fprintf(stderr, "\t***POST-PROBING PHASE COMPLETED***\n");
 }
 
 
