@@ -2,7 +2,7 @@
   "ClientIP": "192.168.209.131",
   "ServerIP": "192.168.209.132",
 
-  "TCPPreProbePort": 1112,
+  "TCPPreProbePort": 1110,
 
   "InterMeasureTime": 5,
   "UDPSourcePort": 9876,
