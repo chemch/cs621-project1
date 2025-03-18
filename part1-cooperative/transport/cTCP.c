@@ -7,8 +7,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-// Create and bind TCP server socket
-int create_tcp_server_socket(int port) {
+
+/** 
+* @param port the port to bind the server socket to
+* @return the server socket file descriptor
+* @brief This function creates a tcp server socket and binds it to the specified port.
+*/
+int build_tcp_server_socket(int port) {
     int sock;
     struct sockaddr_in server_addr;
 
@@ -40,6 +45,12 @@ int create_tcp_server_socket(int port) {
     return sock;
 }
 
+/** 
+ * @param server_sock the server socket file descriptor
+ * @param client_addr the client address struct to store the client address
+ * @return the client socket file descriptor
+ * @brief This function accepts a tcp client connection and returns the client socket file descriptor.
+*/
 int accept_tcp_client(int server_sock, struct sockaddr_in *client_addr) {
     socklen_t len = sizeof(*client_addr);
     int client_sock = accept(server_sock, (struct sockaddr *)client_addr, &len);
@@ -51,6 +62,12 @@ int accept_tcp_client(int server_sock, struct sockaddr_in *client_addr) {
     return client_sock;
 }
 
+/** @param sock the socket file descriptor to send data on
+ * @param data the data to send
+ * @param size the size of the data to send
+ * @return the number of bytes received
+ * @brief This function receives data over a tcp connection.
+*/
 int recv_data(int sock, char *buffer, size_t size) {
     int bytes = recv(sock, buffer, size, 0);
     if (bytes < 0) {
@@ -59,6 +76,13 @@ int recv_data(int sock, char *buffer, size_t size) {
     return bytes;
 }
 
+/** 
+* @param sock the socket file descriptor to send data on
+* @param data the data to send
+* @param size the size of the data to send
+* @return the number of bytes sent
+* @brief This function sends data over a tcp connection.
+*/
 int send_data(int sock, const char *data, size_t size) {
     int bytes = send(sock, data, size, 0);
     if (bytes < 0) {
@@ -67,6 +91,10 @@ int send_data(int sock, const char *data, size_t size) {
     return bytes;
 }
 
+/** 
+ * @param sock the socket file descriptor to close
+ * @brief This function closes a tcp connection by shutting down the socket and closing it.
+*/
 void close_tcp_connection(int sock) {
     shutdown(sock, SHUT_RDWR);
     close(sock);

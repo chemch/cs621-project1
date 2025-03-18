@@ -16,7 +16,7 @@
 Configuration run_preprobing_phase(int port) {
     fprintf(stderr, "\t***PRE-PROBING PHASE STARTED***\n");
 
-    int server_sock = create_tcp_server_socket(port);
+    int server_sock = build_tcp_server_socket(port);
     struct sockaddr_in client_addr;
 
     printf("WAITING FOR CLIENT ON PORT %d...\n", port);
@@ -218,8 +218,6 @@ double run_probing_phase(const Configuration *config) {
             }
         }
     }
-
-    printf("UDP PROBING COMPLETE. CALCULATING DELTA BETWEEN TIMESTAMPS.\n");
     
     // perform time delta calculation
     double low_entropy_time = (low_end.tv_sec - low_start.tv_sec) + (low_end.tv_usec - low_start.tv_usec) / 1.0e6;
@@ -252,7 +250,7 @@ void run_postprobing_phase(const Configuration *config, double time_delta) {
                              "No compression detected.";
     printf("RESULT: %s\n", result_msg);
 
-    int server_sock = create_tcp_server_socket(config->tcp_post_probe);
+    int server_sock = build_tcp_server_socket(config->tcp_post_probe);
     struct sockaddr_in client_addr;
 
     printf("WAITING FOR CLIENT ON PORT %d...\n", config->tcp_post_probe);
