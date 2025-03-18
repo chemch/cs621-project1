@@ -71,11 +71,24 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
         buffer[0] = (i >> 8) & 0xFF;
         buffer[1] = i & 0xFF; 
 
-        // fill the payload with low (zeros) or high (random) entropy data
+        // fill the payload with low (zeros) or high (random) entropy data using /dev/urandom
         if (entropy) {
-            for (int j = 2; j < packet_size; j++) {
-                buffer[j] = rand() % 256;
+            int urand_fd = open("/dev/urandom", O_RDONLY);
+            if (urand_fd < 0) {
+                perror("Failed to open /dev/urandom");
+                exit(EXIT_FAILURE);
             }
+        
+            // read random data from /dev/urandom
+            ssize_t bytes_read = read(urand_fd, buffer + 2, packet_size - 2);
+            if (bytes_read < packet_size - 2) {
+                perror("Failed to read sufficient entropy from /dev/urandom");
+                close(urand_fd);
+                exit(EXIT_FAILURE);
+            }
+        
+            // close the file descriptor
+            close(urand_fd);
         } else {
             memset(buffer + 2, 0, packet_size - 2);
         }
