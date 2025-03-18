@@ -8,7 +8,7 @@
   "UDPSourcePort": 9876,
   "UDPDestinationPort": 8765,
   "UDPPayloadSize": 1000,
-  "UDPPacketCount": 3000,
+  "UDPPacketCount": 8000,
 
   "TCPPostProbePort": 6666,
 
@@ -16,5 +16,5 @@
   "TCPSYNY": 8888,
   "UDPTTL": 255,
 
-  "DebugMode": 0
+  "DebugMode": 1
 }
