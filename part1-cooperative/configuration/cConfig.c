@@ -5,6 +5,7 @@
  *
  * @param configuration_file
  * @return parsed configuration struct from the input file
+ * @brief This function reads the configuration file and parses it into a configuration struct.
  */
 Configuration read_configuration(const char *configuration_file) {
 
@@ -109,6 +110,7 @@ Configuration read_configuration(const char *configuration_file) {
  * @param json to convert
  * @param config resulting from conversion
  * @return confirmation of success
+ * @note The JSON object is converted to a configuration object for use in the application.
  */
 int json_to_configuration(cJSON *json, Configuration *config) {
     // input parameter checking, make sure valid config and json
@@ -171,11 +173,11 @@ int json_to_configuration(cJSON *json, Configuration *config) {
     return 1;
 }
 
-
-// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**
  *
  * @param config
+ * @brief This function prints the configuration to the console.
+ * @note The configuration is printed to the console for debugging purposes.
  */
 void print_configuration(const Configuration *config) {
     printf("\n******\n");
@@ -200,8 +202,8 @@ void print_configuration(const Configuration *config) {
  *
  * @param config to convert
  * @return converted json object
+ * @note The configuration is converted to JSON for transmission over the network.
  */
-// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 char *convert_configuration_to_json(Configuration *config) {
 
     // input parameter checking: confirm config is not empty
@@ -212,12 +214,12 @@ char *convert_configuration_to_json(Configuration *config) {
     // create empty json object for populating
     cJSON *json_obj = cJSON_CreateObject();
 
-    // Validate that the json object was created successfully
+    // validate that the json object was created successfully
     if (!json_obj) {
         return NULL;
     }
 
-    // Add configuration values to object
+    // add configuration values to object
     cJSON_AddStringToObject(json_obj, "ClientIP", config->client_ip);
     cJSON_AddStringToObject(json_obj, "ServerIP", config->server_ip);
     cJSON_AddNumberToObject(json_obj, "UDPSourcePort", config->udp_src_port);
@@ -232,10 +234,10 @@ char *convert_configuration_to_json(Configuration *config) {
     cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
     cJSON_AddNumberToObject(json_obj, "DebugMode", config->debug_mode);
 
-    // Convert json object to string
+    // convert json object to string
     char *json_string = cJSON_PrintUnformatted(json_obj);
 
-    // Free the json object
+    // free the json object
     cJSON_Delete(json_obj);
 
     return json_string;
@@ -244,8 +246,9 @@ char *convert_configuration_to_json(Configuration *config) {
 /**
  *
  * @param configuration
+ * @brief This function forwards the configuration to the server using a TCP connection.
+ * @note The configuration is converted to JSON before being sent to the server.
  */
-// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 void forward_configuration_to_server(Configuration *configuration) {
     int sock;
     struct sockaddr_in server_addr;

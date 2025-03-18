@@ -6,6 +6,8 @@
  *
  * @param config_file to parse
  * @return configuration struct resulting from parsing
+ * @brief This function runs the pre-probing phase of the application. It reads the configuration file
+ *      and sends the configuration to the server.
  */
 Configuration run_preprobing_phase(const char *config_file) {
     fprintf(stderr, "\t***PRE-PROBE PHASE STARTED***\n");
@@ -36,6 +38,10 @@ Configuration run_preprobing_phase(const char *config_file) {
 /**
  *
  * @param config to use for generating udp packet trains
+ * @brief This function runs the probing phase of the application. It sends two UDP packet trains to the server
+ *      to determine if compression is detected. The first train has low entropy, and the second train has high
+ *     entropy. The time delta between the two trains is calculated and returned.
+ * @note The time delta is used to determine if compression is detected.
  */
 void run_probing_phase(const Configuration *config) {
     fprintf(stderr, "\t***PROBE PHASE STARTED***\n");
@@ -74,13 +80,17 @@ void run_probing_phase(const Configuration *config) {
  * receive calculated result back from server whether compression was detected, then print
  * 
  * @param config to use for generating udp packet trains
+ * @brief This function runs the post-probing phase of the application. It communicates with the client
+ *      to send the result of the compression detection based on the time delta between the high and low
+ *     entropy trains.
+ * @note The result message is sent to the client via a TCP connection.
  */
 void run_postprobing_phase(const Configuration *config) {
     fprintf(stderr, "\t***POST-PROBE PHASE STARTED***\n");
     printf("SLEEPING %d SECONDS BEFORE POST PROBE PHASE TRANSMISSION...\n", config->inter_measure_time * 2);
 
     // sleep for the specified phase transition time
-    sleep(config->inter_measure_time * 2);
+    sleep(config->inter_measure_time + PROBING_PHASE_DELAY);
 
     // create a socket for post-probing
     int sock;
@@ -122,8 +132,16 @@ void run_postprobing_phase(const Configuration *config) {
     fprintf(stderr, "\t***POST-PROBE PHASE COMPLETED SUCCESSFULLY!***\n\n");
 }
 
-/*
+/**
  * client side of part 1 (cooperative) of the project to determine if compression is detected
+* @param argc the number of arguments
+* @param argv the arguments
+* @return the exit status of the program
+* @brief This function is the entry point for the client side of the application. It runs the pre-probing,
+*       probing, and post-probing phases of the application to determine if compression is detected.
+*      The client sends configuration data and UDP packet trains to the server. It then receives the
+*     result of the compression detection from the server.
+* @note The client is run with the command line arguments: <CONFIG.JSON>
 */
 int main(const int argc, char *argv[]) {
 

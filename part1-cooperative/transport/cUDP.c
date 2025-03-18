@@ -1,5 +1,19 @@
 #include "cUDP.h"
 
+/**
+ * @param client_ip the client ip address
+ * @param server_ip the server ip address
+ * @param src_port the source port
+ * @param dst_port the destination port
+ * @param num_packets the number of packets to send
+ * @param packet_size the size of each packet
+ * @param entropy the entropy level of the packet payload
+ * @param debug_mode the debug mode flag
+ * 
+ * @brief This function transmits a UDP train of packets to the server.
+ * @note The function creates a UDP socket and binds to the source port. It then sends a specified number of packets
+ *       to the server with a specified payload size and entropy level.
+ */
 void transmit_udp_train(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy, int debug_mode) {
     int sock;
     struct sockaddr_in src_addr, dest_addr;
