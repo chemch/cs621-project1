@@ -1,4 +1,4 @@
-#include "compdetect.h"
+#include "compdetect_coop.h"
 
 #define PROBING_PHASE_DELAY 3
 

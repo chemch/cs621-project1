@@ -1,7 +1,7 @@
 #ifndef C_UDP_H
 #define C_UDP_H
 
-#include "app/compdetect.h"
+#include "app/compdetect_coop.h"
 
 #define UDP_SRC_PORT 9876
 #define UDP_DST_PORT 8765

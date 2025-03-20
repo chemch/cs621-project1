@@ -1,0 +1,15 @@
+{
+  "ClientIP": "192.168.209.131",
+  "ServerIP": "192.168.209.132",
+
+  "UDPSourcePort": 9876,
+  "UDPDestinationPort": 8765,
+  "UDPPayloadSize": 1000,
+  "UDPPacketCount": 6000,
+
+  "TCPSYNX": 9990,
+  "TCPSYNY": 8888,
+  "UDPTTL": 255,
+
+  "DebugMode": 0
+}

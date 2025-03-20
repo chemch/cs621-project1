@@ -1,17 +1,18 @@
-#ifndef COMPDETECT_H
-#define COMPDETECT_H
+#ifndef COMPDETECT_COOP_H
+#define COMPDETECT_COOP_H
 
-// required external dependencies
+// Required external dependencies
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/time.h>
-#include <netinet/ip.h>     
+#include <netinet/ip.h>
 #include <netinet/in.h>
-#include <netinet/udp.h>    
+#include <netinet/udp.h>
 #include <time.h>
 
 // required local dependencies
