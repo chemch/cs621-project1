@@ -16,10 +16,10 @@
 #include <time.h>
 
 // required local dependencies
-#include "json/cJSON.h"
-#include "configuration/cConfig.h"
-#include "transport/cUDP.h"
-#include "transport/cTCP.h"
+#include "p1_json/cJSON.h"
+#include "p1_configuration/cConfig.h"
+#include "p1_transport/cUDP.h"
+#include "p1_transport/cTCP.h"
 
 // application defaults (per project 1 pdf instructions)
 #define DEF_UDP_SRC_PORT 9876

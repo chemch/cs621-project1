@@ -1,4 +1,4 @@
-# include "compdetect.h"
+# include "compdetect_alone.h"
 
 int main(const int argc, char *argv[]) {
 
@@ -18,13 +18,13 @@ int main(const int argc, char *argv[]) {
 
     struct timeval head_rst_time, tail_rst_time;
 
-    // // Send Head SYN
+    // Send Head SYN
     // send_syn(src_ip, dst_ip, syn_port_x, syn_port_x);
 
     // Send UDP Packet Train
     // send_udp_train(configuration);
 
-    // // Send Tail SYN
+    // Send Tail SYN
     // send_syn(src_ip, dst_ip, syn_port_y, syn_port_y);
 
     // // Capture RSTs

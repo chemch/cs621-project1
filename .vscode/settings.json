@@ -4,7 +4,8 @@
         "compdetect.h": "c",
         "cudp.h": "c",
         "ctcp.h": "c",
-        "compdetect_coop.h": "c"
+        "compdetect_coop.h": "c",
+        "compdetect_alone.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

@@ -1,7 +1,7 @@
 #ifndef C_TCP_H
 #define C_TCP_H
 
-#include "app/compdetect_coop.h"
+#include "p1_app/compdetect_coop.h"
 
 // tcp server setup
 int build_tcp_server_socket(int port);

@@ -13,12 +13,21 @@
 #include <netinet/in.h>
 #include <netinet/udp.h>    
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/ip.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+
 
 // required local dependencies
-#include "json/cJSON.h"
-// #include "configuration/cConfig.h"
-// #include "transport/cUDP.h"
-// #include "transport/cTCP.h"
+#include "p2_json/cJSON.h"
+#include "p2_configuration/cConfig.h"
+#include "p2_transport/cUDP.h"
+// #include "p2_transport/cTCP.h"
 
 // application defaults (per project 1 pdf instructions)
 #define DEF_UDP_SRC_PORT 9876

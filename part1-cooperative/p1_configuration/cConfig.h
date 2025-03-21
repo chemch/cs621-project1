@@ -1,7 +1,7 @@
 #ifndef C_CONFIG_H
 #define C_CONFIG_H
 
-#include "app/compdetect_coop.h"
+#include "p1_app/compdetect_coop.h"
 
 // custom struct definition for configuration
 typedef struct {

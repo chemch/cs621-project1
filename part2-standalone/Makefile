@@ -1,13 +1,13 @@
 # compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -Ijson -Iconfiguration -Itransport -Iapp -I.
+CFLAGS = -Wall -Wextra -std=c11 -Ip2_json -Ip2_configuration -Ip2_transport -Ip2_app -I.
 
 # directories for binaries and object files
 BIN_DIR = bin
 BUILD_DIR = build
 
 # source files
-SRC_CLIENT = app/compdetect.c json/cJSON.c configuration/cConfig.c transport/cTCP.c transport/cUDP.c
+SRC_CLIENT = p2_app/compdetect.c p2_json/cJSON.c p2_configuration/cConfig.c p2_transport/cUDP.c
 
 # object file definitions (stored in build/)
 OBJ_CLIENT = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_CLIENT))
