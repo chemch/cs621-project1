@@ -132,8 +132,6 @@ int capture_rst(int head_port_raw, struct timeval *rst_timestamp) {
     struct timeval start_time, current_time;
     gettimeofday(&start_time, NULL);
 
-    unsigned short int head_port_net = htons(head_port_raw);
-
     // Set 15s socket timeout
     struct timeval tv;
     tv.tv_sec = 15;
@@ -160,9 +158,9 @@ int capture_rst(int head_port_raw, struct timeval *rst_timestamp) {
                 unsigned short int sport = (buffer[20] << 8) | buffer[21];
 
 				fprintf(stderr, "Received RST: Source Port from Buffer %d\n", sport);
-				fprintf(stderr, "Looking for Port Number:  %d\n", head_port_net);
+				fprintf(stderr, "Looking for Port Number:  %d\n", head_port_raw);
 
-                if (sport == head_port_net) {
+                if (sport == head_port_raw) {
                     // Record timestamp of RST packet
                     if (gettimeofday(rst_timestamp, NULL) != 0) {
                         perror("Failed to get RST timestamp");
