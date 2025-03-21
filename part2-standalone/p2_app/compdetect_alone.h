@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <sys/socket.h>
+#include <pthread.h>
 #include <sys/time.h>
 
 

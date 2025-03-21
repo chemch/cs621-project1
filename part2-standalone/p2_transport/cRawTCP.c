@@ -158,6 +158,10 @@ int capture_rst(int head_port_raw, struct timeval *rst_timestamp) {
             // Check for TCP protocol and RST flag
             if ((unsigned char)buffer[9] == IPPROTO_TCP && (buffer[33] & 0x04)) {  // TCP and RST
                 unsigned short int sport = (buffer[20] << 8) | buffer[21];
+
+				fprintf(stderr, "Received RST: Source Port from Buffer %d\n", sport);
+				fprintf(stderr, "Looking for Port Number:  %d\n", head_port_net);
+
                 if (sport == head_port_net) {
                     // Record timestamp of RST packet
                     if (gettimeofday(rst_timestamp, NULL) != 0) {
