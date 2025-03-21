@@ -1,46 +1,55 @@
-# include "compdetect_alone.h"
+#include "compdetect_alone.h"
 
 int main(const int argc, char *argv[]) {
 
-    // perform input parameter check
+    // Validate input parameters
     if (argc != 2) {
         fprintf(stderr, "CORRECT USAGE: %s <CONFIG.JSON>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
+    // Read configuration from file
     Configuration config = read_configuration(argv[1]);
 
-    // validate that server ip address and port are valid
+    // Validate server IP
     if (config.server_ip[0] == '\0') {
         fprintf(stderr, "INVALID SERVER CONFIGURATION FILE PROVIDED.\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
-    struct timeval head_rst_time, tail_rst_time;
-    
-    // Send HEAD SYN packet to port x
-    printf("Sending HEAD SYN to %s:%d...\n", config.server_ip, config.tcp_syn_x);
-    // send_syn(config.client_ip, config.server_ip, config.udp_src_port, config.tcp_syn_x);
+    // Run LOW entropy train
+    double low_delta = run_train_flow(config.client_ip, config.server_ip,
+        config.udp_src_port, config.udp_dst_port,
+        config.tcp_syn_x, config.tcp_syn_y,
+        config.udp_packet_count, config.udp_payload_size,
+        config.ttl, config.debug_mode, 0);  // 0 = LOW entropy
 
-    // Send LOW entropy UDP train
-    printf("Sending LOW entropy UDP train...\n");
-    transmit_udp_train(config.client_ip, config.server_ip,
-                        config.udp_src_port, config.udp_dst_port,
-                        config.udp_packet_count, config.udp_payload_size,
-                        0,  // 0 = low entropy
-                        config.ttl, config.debug_mode);
+    if (low_delta < 0) {
+        printf("Low entropy run failed.\n");
+        return EXIT_FAILURE;
+    }
 
-    // Send TAIL SYN packet to port y
-    printf("Sending TAIL SYN to %s:%d...\n", config.server_ip, config.tcp_syn_y);
-    // send_syn(config.client_ip, config.server_ip, config.udp_src_port, config.tcp_syn_y);
+    // Run HIGH entropy train
+    double high_delta = run_train_flow(config.client_ip, config.server_ip,
+        config.udp_src_port, config.udp_dst_port,
+        config.tcp_syn_x, config.tcp_syn_y,
+        config.udp_packet_count, config.udp_payload_size,
+        config.ttl, config.debug_mode, 1);  // 1 = HIGH entropy
 
-    // Send HIGH entropy UDP train
-    printf("Sending HIGH entropy UDP train...\n");
-    transmit_udp_train(config.client_ip, config.server_ip,
-                        config.udp_src_port, config.udp_dst_port,
-                        config.udp_packet_count, config.udp_payload_size,
-                        1,  // 1 = high entropy
-                        config.ttl, config.debug_mode);
+    if (high_delta < 0) {
+        printf("High entropy run failed.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Calculate and print the difference
+    double delta_difference = high_delta - low_delta;
+    printf("Delta Difference (High - Low): %.6f seconds\n", delta_difference);
+
+    if (delta_difference > 0.1) {
+        printf("Compression Detected!\n");
+    } else {
+        printf("No Compression Detected.\n");
+    }
 
     printf("Transmission complete.\n");
     return EXIT_SUCCESS;

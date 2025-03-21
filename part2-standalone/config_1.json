@@ -7,7 +7,7 @@
   "UDPPayloadSize": 1000,
   "UDPPacketCount": 6000,
 
-  "TCPSYNX": 9990,
+  "TCPSYNX": 9999,
   "TCPSYNY": 8888,
   "UDPTTL": 255,
 

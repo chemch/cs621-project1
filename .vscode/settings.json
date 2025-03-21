@@ -5,7 +5,9 @@
         "cudp.h": "c",
         "ctcp.h": "c",
         "compdetect_coop.h": "c",
-        "compdetect_alone.h": "c"
+        "compdetect_alone.h": "c",
+        "cflow.h": "c",
+        "crawtcp.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }
