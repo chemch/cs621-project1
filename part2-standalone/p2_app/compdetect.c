@@ -8,43 +8,40 @@ int main(const int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    Configuration configuration = read_configuration(argv[1]);
+    Configuration config = read_configuration(argv[1]);
 
     // validate that server ip address and port are valid
-    if (configuration.server_ip[0] == '\0') {
+    if (config.server_ip[0] == '\0') {
         fprintf(stderr, "INVALID SERVER CONFIGURATION FILE PROVIDED.\n");
         exit(EXIT_FAILURE);
     }
 
     struct timeval head_rst_time, tail_rst_time;
+    
+    // Send HEAD SYN packet to port x
+    printf("Sending HEAD SYN to %s:%d...\n", config.server_ip, config.tcp_syn_x);
+    // send_syn(config.client_ip, config.server_ip, config.udp_src_port, config.tcp_syn_x);
 
-    // Send Head SYN
-    // send_syn(src_ip, dst_ip, syn_port_x, syn_port_x);
+    // Send LOW entropy UDP train
+    printf("Sending LOW entropy UDP train...\n");
+    transmit_udp_train(config.client_ip, config.server_ip,
+                        config.udp_src_port, config.udp_dst_port,
+                        config.udp_packet_count, config.udp_payload_size,
+                        0,  // 0 = low entropy
+                        config.ttl, config.debug_mode);
 
-    // Send UDP Packet Train
-    // send_udp_train(configuration);
+    // Send TAIL SYN packet to port y
+    printf("Sending TAIL SYN to %s:%d...\n", config.server_ip, config.tcp_syn_y);
+    // send_syn(config.client_ip, config.server_ip, config.udp_src_port, config.tcp_syn_y);
 
-    // Send Tail SYN
-    // send_syn(src_ip, dst_ip, syn_port_y, syn_port_y);
+    // Send HIGH entropy UDP train
+    printf("Sending HIGH entropy UDP train...\n");
+    transmit_udp_train(config.client_ip, config.server_ip,
+                        config.udp_src_port, config.udp_dst_port,
+                        config.udp_packet_count, config.udp_payload_size,
+                        1,  // 1 = high entropy
+                        config.ttl, config.debug_mode);
 
-    // // Capture RSTs
-    // int got_head_rst = capture_rst(syn_port_x, &head_rst_time);
-    // int got_tail_rst = capture_rst(syn_port_y, &tail_rst_time);
-
-    // if (!got_head_rst || !got_tail_rst) {
-    //     printf("Failed to detect due to insufficient information.\n");
-    //     return 0;
-    // }
-
-    // double delta = (tail_rst_time.tv_sec - head_rst_time.tv_sec)
-    //     + (tail_rst_time.tv_usec - head_rst_time.tv_usec) / 1e6;
-
-    // printf("RST Arrival Delta: %.6f seconds\n", delta);
-
-    // if (delta > COMPRESSION_THRESHOLD)
-    //     printf("Compression Detected!\n");
-    // else
-    //     printf("No Compression Detected.\n");
-
+    printf("Transmission complete.\n");
     return EXIT_SUCCESS;
 }
