@@ -47,7 +47,7 @@ struct pseudo_header {
  * @param dst_port Destination port number
  * @return Socket file descriptor, or -1 on error
  */
-int send_syn(const char *src_ip, const char *dst_ip, int dst_port);
+int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port);
 
 /**
  * @brief Computes checksum for raw packet data.
@@ -55,7 +55,7 @@ int send_syn(const char *src_ip, const char *dst_ip, int dst_port);
  * @param size Length of buffer
  * @return Calculated checksum
  */
-unsigned short checksum(const char *buf, unsigned int size);
+unsigned short computeChecksum(const char *buf, unsigned int size);
 
 /**
  * @brief Captures an RST packet on a given port and retrieves its timestamp.
@@ -63,6 +63,6 @@ unsigned short checksum(const char *buf, unsigned int size);
  * @param rst_timestamp Pointer to timeval to store arrival time
  * @return 1 if RST captured, 0 on timeout/failure
  */
-int capture_rst(int port, struct timeval *rst_timestamp);
+int record_reset_packet(int port, struct timeval *rst_timestamp, int reset_timeout, int socket_timeout, int debug_mode);
 
 #endif // C_RAW_TCP_H

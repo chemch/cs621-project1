@@ -1,8 +1,6 @@
 #ifndef C_UDP_H
 #define C_UDP_H
 
-#include <stdint.h>  // For fixed-width integer types
-#include <stddef.h>  // For size_t
 #include "p2_app/compdetect_alone.h"  // Assuming Configuration struct and other dependencies
 
 // --- Constants ---

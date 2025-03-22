@@ -1,6 +1,6 @@
 {
   "ClientIP": "192.168.209.131",
-  "ServerIP": "192.168.209.132",
+  "ServerIP": "192.168.209.133",
 
   "UDPSourcePort": 9876,
   "UDPDestinationPort": 8765,

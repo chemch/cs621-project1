@@ -55,7 +55,8 @@ int main(const int argc, char *argv[]) {
         config.udp_payload_size,
         config.ttl, 
         config.debug_mode, 
-        0); // 0 = LOW entropy
+        0,
+        config.inter_measure_time);
 
     if (low_delta < 0) {
         fatal_error("LOW ENTROPY RUN FAILED.\n");
@@ -77,7 +78,8 @@ int main(const int argc, char *argv[]) {
         config.udp_payload_size,
         config.ttl, 
         config.debug_mode, 
-        1); // 1 = HIGH entropy
+        1,
+        config.inter_measure_time);
 
     if (high_delta < 0) {
         fatal_error("HIGH ENTROPY RUN FAILED.\n");

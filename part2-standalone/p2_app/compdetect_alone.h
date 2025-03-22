@@ -62,5 +62,6 @@
 #define DEF_COMPRESION_THRES     0.1
 #define DEF_BUFFER_SIZE          4096
 #define DEF_PACK_SIZE            1024
+#define DEF_MAX_PACKET_SIZE      4096
 
 #endif // P2_COMPDETECT_H

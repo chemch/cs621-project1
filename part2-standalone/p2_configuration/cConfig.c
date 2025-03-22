@@ -30,9 +30,8 @@ Configuration fetch_configuration(const char *configuration_file) {
     // Open configuration file
     FILE *file = fopen(configuration_file, "r");
     if (!file) {
-        fprintf(stderr, "ERROR OPENING CONFIGURATION FILE: %s\n", configuration_file);
         perror("fopen");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO OPEN CONFIGURATION FILE");
     }
 
     // Determine file size
@@ -44,7 +43,7 @@ Configuration fetch_configuration(const char *configuration_file) {
     char *json_data = malloc(filesize + 1);
     if (!json_data) {
         fclose(file);
-        fatal_error("Memory allocation failed");
+        fatal_error("MEMORY ALLOCATION FAILED");
     }
 
     size_t read_bytes = fread(json_data, 1, filesize, file);

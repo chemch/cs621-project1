@@ -7,8 +7,11 @@
  * @brief Thread arguments for capturing a single RST packet timestamp.
  */
 struct rst_thread_args {
-    int port;                             ///< Port to monitor for RST response
-    struct timeval *timestamp;           ///< Pointer to store RST arrival timestamp
+    int port;                                ///< Port to monitor for RST response
+    struct timeval *timestamp;              ///< Pointer to store RST arrival timestamp
+    int reset_timeout;                      ///< Time to wait for RST response
+    int socket_timeout;                      ///< Socket timeout value
+    int debug_mode;                         ///< Debug mode flag
 };
 
 /**
@@ -33,7 +36,7 @@ struct rst_capture_args {
  * @param arg Pointer to rst_thread_args_t struct
  * @return NULL
  */
-void *capture_rst_thread(void *arg);
+void *monitor_reset_thread(void *arg);
 
 /**
  * @brief Executes the entropy detection flow for one entropy level.
@@ -55,6 +58,6 @@ double process_entropy_flow(const char *client_ip, const char *server_ip,
                         int udp_src_port, int udp_dst_port,
                         int tcp_syn_x, int tcp_syn_y,
                         int udp_packet_count, int udp_payload_size,
-                        int ttl, int debug_mode, int entropy_level);
+                        int ttl, int debug_mode, int entropy_level, int def_timeout);
 
 #endif  // C_FLOW_H

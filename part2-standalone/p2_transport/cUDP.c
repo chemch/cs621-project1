@@ -21,30 +21,33 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
 
     // create socket
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("FAILED TO CREATE SOCKET.");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CREATE SOCKET.");
     }
 
-    printf("SOCKET SET UP SUCCESSFULLY.\n");
+    if (debug_mode) {
+        printf("SOCKET SET UP SUCCESSFULLY.\n");
+    }
 
     // set TTL (Time To Live) for all packets
     if (setsockopt(sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) {
-        perror("FAILED TO SET TTL.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO SET TTL.");
     }
 
-    printf("TTL SET TO %d SUCCESSFULLY.\n", ttl);
+    if (debug_mode) {
+        printf("TTL SET TO %d SUCCESSFULLY.\n", ttl);
+    }
 
     // set dont fragment bit to 1
     int dont_fragment_bit = IP_PMTUDISC_DO;
     if (setsockopt(sock, IPPROTO_IP, IP_MTU_DISCOVER, &dont_fragment_bit, sizeof(dont_fragment_bit)) == -1) {
-        perror("FAILED TO SET DONT FRAGMENT BIT.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO SET DONT FRAGMENT BIT.");
     }
 
-    printf("DONT FRAGMENT BIT SET SUCCESSFULLY.\n");
+    if (debug_mode) {
+        printf("DONT FRAGMENT BIT SET SUCCESSFULLY.\n");
+    }
 
     // bind to the specified source ip and source port
     memset(&src_addr, 0, sizeof(src_addr));
@@ -53,12 +56,13 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
     src_addr.sin_addr.s_addr = inet_addr(client_ip); 
 
     if (bind(sock, (struct sockaddr *)&src_addr, sizeof(src_addr)) == -1) {
-        perror("FAILED TO SOURCE PORT.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO BIND SOURCE IP AND PORT.");
     }
 
-    printf("SOURCE IP: %s, SOURCE PORT: %d BOUND SUCCESSFULLY.\n", client_ip, src_port);
+    if(debug_mode) {
+        printf("SOURCE IP: %s, SOURCE PORT: %d BOUND SUCCESSFULLY.\n", client_ip, src_port);
+    }
 
     // set up destination address
     memset(&dest_addr, 0, sizeof(dest_addr));
@@ -84,16 +88,14 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
         if (entropy) {
             int urand_fd = open("/dev/urandom", O_RDONLY);
             if (urand_fd < 0) {
-                perror("FAILED TO OPEN /DEV/URANDOM");
-                exit(EXIT_FAILURE);
+                fatal_error("FAILED TO OPEN /DEV/URANDOM");
             }
         
             // Read entropy from /dev/urandom
             ssize_t bytes_read = read(urand_fd, buffer + 2, packet_size - 2);
             if (bytes_read < packet_size - 2) {
-                perror("FAILED TO READ SUFFICIENT ENTROPY FROM /DEV/URANDOM");
                 close(urand_fd);
-                exit(EXIT_FAILURE);
+                fatal_error("FAILED TO READ SUFFICIENT ENTROPY FROM /DEV/URANDOM");
             }
         
             // close the file descriptor
@@ -105,7 +107,8 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
         // transmit the packet
         if (sendto(sock, buffer, packet_size, 0, 
                    (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
-            perror("FAILED TO SEND PACKET. ");
+            fatal_error("FAILED TO SEND PACKET.");
+
         } else {
             // print out verbose logs if debug mode is enabled
             if (debug_mode) {
@@ -115,7 +118,9 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
         }
     }
 
-    printf("SENT %s ENTROPY PACKETS SUCCESSFULLY.\n", entropy ? "HIGH" : "LOW");
+    if(debug_mode) {
+        printf("SENT %s ENTROPY PACKETS SUCCESSFULLY.\n", entropy ? "HIGH" : "LOW");
+    }
 
     close(sock);
 }
