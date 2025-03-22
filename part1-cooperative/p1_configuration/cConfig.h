@@ -20,7 +20,7 @@ typedef struct {
     int debug_mode;
 } Configuration;
 
-Configuration read_configuration(const char *configuration_file);
+Configuration fetch_configuration(const char *configuration_file);
 void print_configuration(const Configuration *config);
 void forward_configuration_to_server(Configuration *configuration);
 int json_to_configuration(cJSON *json, Configuration *config);

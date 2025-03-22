@@ -7,7 +7,7 @@
  * @return parsed configuration struct from the input file
  * @brief This function reads the configuration file and parses it into a configuration struct.
  */
-Configuration read_configuration(const char *configuration_file) {
+Configuration fetch_configuration(const char *configuration_file) {
 
     // create a configuration object with the default values (in case some attributes are not provided in the file)
     Configuration configuration = {

@@ -17,7 +17,7 @@
 void transmit_udp_train(const char *client_ip, const char *server_ip, int src_port, int dst_port, int num_packets, int packet_size, int entropy, int debug_mode) {
     int sock;
     struct sockaddr_in src_addr, dest_addr;
-    char buffer[PACKET_SIZE];
+    char buffer[DEF_PACK_SIZE];
 
     // create socket
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -65,7 +65,7 @@ void transmit_udp_train(const char *client_ip, const char *server_ip, int src_po
     
     // transmit udp train
     for (int i = 0; i < num_packets; i++) {
-        memset(buffer, 0, PACKET_SIZE);
+        memset(buffer, 0, DEF_PACK_SIZE);
 
         // set packet id in the first two bytes
         buffer[0] = (i >> 8) & 0xFF;

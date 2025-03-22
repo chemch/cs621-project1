@@ -1,16 +1,21 @@
 #include "cConfig.h"
 
-// ReSharper disable once CppNonInlineFunctionDefinitionInHeaderFile
 /**
+ * @file cConfig.c
+ * @brief Parses JSON configuration for compression detection tool.
  *
- * @param configuration_file
- * @return parsed configuration struct from the input file
- * @brief This function reads the configuration file and parses it into a configuration struct.
+ * This module reads a JSON file containing configuration settings and populates
+ * a Configuration struct with user-provided values or sensible defaults.
  */
-Configuration read_configuration(const char *configuration_file) {
 
-    // create a configuration object with the default values (in case some attributes are not provided in the file)
-    Configuration configuration = {
+/**
+ * @brief Reads and parses the configuration file into a Configuration struct.
+ *
+ * @param configuration_file Path to the JSON configuration file.
+ * @return Parsed Configuration struct with default values where applicable.
+ */
+Configuration fetch_configuration(const char *configuration_file) {
+    Configuration config = {
         .udp_src_port = DEF_UDP_SRC_PORT,
         .udp_dst_port = DEF_UDP_DST_PORT,
         .tcp_syn_x = DEF_TCP_SYN_X,
@@ -22,203 +27,78 @@ Configuration read_configuration(const char *configuration_file) {
         .debug_mode = 0
     };
 
-    // create file stream to read from the input configuration
-    FILE *raw_file = fopen(configuration_file, "r");
-
-    // input parameter checking: make sure the file can be opened
-    if (!raw_file) {
-        perror("FAILED TO OPEN CONFIGURATION FILE.");
+    // Open configuration file
+    FILE *file = fopen(configuration_file, "r");
+    if (!file) {
+        fprintf(stderr, "ERROR OPENING CONFIGURATION FILE: %s\n", configuration_file);
+        perror("fopen");
         exit(EXIT_FAILURE);
     }
 
-    // determine file size
-    fseek(raw_file, 0, SEEK_END);
-    const long filesize = ftell(raw_file);
-    rewind(raw_file);
+    // Determine file size
+    fseek(file, 0, SEEK_END);
+    long filesize = ftell(file);
+    rewind(file);
 
-    // read file contents into memory
-    char *json_file = malloc(filesize + 1);
-    fread(json_file, 1, filesize, raw_file);
-    json_file[filesize] = '\0';
+    // Allocate buffer and read file contents
+    char *json_data = malloc(filesize + 1);
+    if (!json_data) {
+        fclose(file);
+        fatal_error("Memory allocation failed");
+    }
 
-    // close the handle to the raw input file
-    fclose(raw_file);
+    size_t read_bytes = fread(json_data, 1, filesize, file);
+    if (read_bytes != (size_t)filesize) {
+        fclose(file);
+        free(json_data);
+        fatal_error("ERROR READING CONFIGURATION FILE CONTENTS\n");
+    }
+    json_data[filesize] = '\0';
+    fclose(file);
 
-    // parse the json file into a json object
-    cJSON *json = cJSON_Parse(json_file);
+    // Parse JSON
+    cJSON *json = cJSON_Parse(json_data);
+    free(json_data);
 
-    // validate that the json has been properly parsed to avoid errors later
     if (!json) {
-        perror("UNABLE TO PARSE JSON CONFIG FILE. CHECK THE FILE.");
-        exit(EXIT_FAILURE);
+        fatal_error("ERROR PARSING JSON CONFIGURATION FILE");
     }
 
-    // iterate through the json object and populate the configuration object with the values
-    cJSON *json_item;
+    // JSON value parsing macros
+    #define CUSTOM_READ_STR_JSON_EL(key, target) \
+        do { \
+            cJSON *item = cJSON_GetObjectItemCaseSensitive(json, key); \
+            if (cJSON_IsString(item) && item->valuestring) { \
+                strncpy(target, item->valuestring, sizeof(target) - 1); \
+                target[sizeof(target) - 1] = '\0'; \
+            } \
+        } while (0)
 
-    if ((json_item = cJSON_GetObjectItem(json, "ClientIP")))
-    strncpy(configuration.client_ip, json_item->valuestring, sizeof(configuration.client_ip));
+    #define CUSTOM_READ_INT_JSON_EL(key, target) \
+        do { \
+            cJSON *item = cJSON_GetObjectItemCaseSensitive(json, key); \
+            if (cJSON_IsNumber(item)) { \
+                target = item->valueint; \
+            } \
+        } while (0)
 
-    if ((json_item = cJSON_GetObjectItem(json, "ServerIP")))
-        strncpy(configuration.server_ip, json_item->valuestring, sizeof(configuration.server_ip));
+    // Extract config values with fallback defaults
+    CUSTOM_READ_STR_JSON_EL("ClientIP", config.client_ip);                // Client's IP address
+    CUSTOM_READ_STR_JSON_EL("ServerIP", config.server_ip);                // Server's IP address
+    CUSTOM_READ_INT_JSON_EL("UDPSourcePort", config.udp_src_port);           // UDP source port
+    CUSTOM_READ_INT_JSON_EL("UDPDestinationPort", config.udp_dst_port);      // UDP destination port
+    CUSTOM_READ_INT_JSON_EL("TCPSYNX", config.tcp_syn_x);                    // TCP SYN head port
+    CUSTOM_READ_INT_JSON_EL("TCPSYNY", config.tcp_syn_y);                    // TCP SYN tail port
+    CUSTOM_READ_INT_JSON_EL("UDPPayloadSize", config.udp_payload_size);      // UDP payload size
+    CUSTOM_READ_INT_JSON_EL("InterMeasureTime", config.inter_measure_time);  // Inter-measurement time
+    CUSTOM_READ_INT_JSON_EL("UDPPacketCount", config.udp_packet_count);      // Number of UDP packets
+    CUSTOM_READ_INT_JSON_EL("TTL", config.ttl);                              // TTL for UDP packets
+    CUSTOM_READ_INT_JSON_EL("DebugMode", config.debug_mode);                 // Debug mode flag
 
-    if ((json_item = cJSON_GetObjectItem(json, "UDPSourcePort")))
-        configuration.udp_src_port = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "UDPDestinationPort")))
-        configuration.udp_dst_port = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "TCPSYNX")))
-        configuration.tcp_syn_x = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "TCPSYNY")))
-        configuration.tcp_syn_y = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "UDPPayloadSize")))
-        configuration.udp_payload_size = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "InterMeasureTime")))
-        configuration.inter_measure_time = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "UDPPacketCount")))
-        configuration.udp_packet_count = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "TTL")))
-        configuration.ttl = json_item->valueint;
-
-    if ((json_item = cJSON_GetObjectItem(json, "DebugMode")))
-    configuration.debug_mode = json_item->valueint;
-
-    // free the memory allocated for the json file
+    // Cleanup
     cJSON_Delete(json);
-    free(json_file);
+    #undef READ_STRING_JSON
+    #undef READ_INT_JSON
 
-    return configuration;
-}
-
-
-/**
- *
- * @param json to convert
- * @param config resulting from conversion
- * @return confirmation of success
- * @note The JSON object is converted to a configuration object for use in the application.
- */
-int json_to_configuration(cJSON *json, Configuration *config) {
-    // input parameter checking, make sure valid config and json
-    if (!json || !config) return 0;
-
-    // iterate through the json object and populate the configuration object with the values
-    cJSON *item;
-    if (((item = cJSON_GetObjectItem(json, "ClientIP"))) && cJSON_IsString(item)) {
-        strncpy(config->client_ip, item->valuestring, sizeof(config->client_ip));
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "ServerIP"))) && cJSON_IsString(item)) {
-        strncpy(config->server_ip, item->valuestring, sizeof(config->server_ip));
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "UDPSourcePort"))) && cJSON_IsNumber(item)) {
-        config->udp_src_port = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "UDPDestinationPort"))) && cJSON_IsNumber(item)) {
-        config->udp_dst_port = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "TCPSYNX"))) && cJSON_IsNumber(item)) {
-        config->tcp_syn_x = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "TCPSYNY"))) && cJSON_IsNumber(item)) {
-        config->tcp_syn_y = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "UDPPayloadSize"))) && cJSON_IsNumber(item)) {
-        config->udp_payload_size = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "InterMeasureTime"))) && cJSON_IsNumber(item)) {
-        config->inter_measure_time = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "UDPPacketCount"))) && cJSON_IsNumber(item)) {
-        config->udp_packet_count = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "TTL"))) && cJSON_IsNumber(item)) {
-        config->ttl = item->valueint;
-    }
-
-    if (((item = cJSON_GetObjectItem(json, "DebugMode"))) && cJSON_IsNumber(item)) {
-        config->debug_mode = item->valueint;
-    }
-
-    return 1;
-}
-
-/**
- *
- * @param config
- * @brief This function prints the configuration to the console.
- * @note The configuration is printed to the console for debugging purposes.
- */
-void print_configuration(const Configuration *config) {
-    printf("\n******\n");
-    printf("CONFIGURATION FILE SETTINGS:\n");
-    printf("CLIENT IP: %s\n", config->client_ip);
-    printf("SERVER IP: %s\n", config->server_ip);
-    printf("UDP SOURCE PORT: %d\n", config->udp_src_port);
-    printf("UDP DESTINATION PORT: %d\n", config->udp_dst_port);
-    printf("TCP SYN X PORT: %d\n", config->tcp_syn_x);
-    printf("TCP SYN Y PORT: %d\n", config->tcp_syn_y);
-    printf("UDP PAYLOAD SIZE: %dB\n", config->udp_payload_size);
-    printf("INTER-MEASUREMENT TIME: %d SECONDS\n", config->inter_measure_time);
-    printf("NUMBER OF UDP PACKETS: %d\n", config->udp_packet_count);
-    printf("UDP TTL: %d\n", config->ttl);
-    printf("DEBUG MODE: %s\n", config->debug_mode ? "ENABLED" : "DISABLED");
-    printf("******\n");
-}
-
-/**
- *
- * @param config to convert
- * @return converted json object
- * @note The configuration is converted to JSON for transmission over the network.
- */
-char *convert_configuration_to_json(Configuration *config) {
-
-    // input parameter checking: confirm config is not empty
-    if (!config) {
-        return NULL;
-    }
-
-    // create empty json object for populating
-    cJSON *json_obj = cJSON_CreateObject();
-
-    // validate that the json object was created successfully
-    if (!json_obj) {
-        return NULL;
-    }
-
-    // add configuration values to object
-    cJSON_AddStringToObject(json_obj, "ClientIP", config->client_ip);
-    cJSON_AddStringToObject(json_obj, "ServerIP", config->server_ip);
-    cJSON_AddNumberToObject(json_obj, "UDPSourcePort", config->udp_src_port);
-    cJSON_AddNumberToObject(json_obj, "UDPDestinationPort", config->udp_dst_port);
-    cJSON_AddNumberToObject(json_obj, "TCPSYNX", config->tcp_syn_x);
-    cJSON_AddNumberToObject(json_obj, "TCPSYNY", config->tcp_syn_y);
-    cJSON_AddNumberToObject(json_obj, "UDPPayloadSize", config->udp_payload_size);
-    cJSON_AddNumberToObject(json_obj, "InterMeasureTime", config->inter_measure_time);
-    cJSON_AddNumberToObject(json_obj, "UDPPacketCount", config->udp_packet_count);
-    cJSON_AddNumberToObject(json_obj, "TTL", config->ttl);
-    cJSON_AddNumberToObject(json_obj, "DebugMode", config->debug_mode);
-
-    // convert json object to string
-    char *json_string = cJSON_PrintUnformatted(json_obj);
-
-    // free the json object
-    cJSON_Delete(json_obj);
-
-    return json_string;
+    return config;
 }

@@ -1,0 +1,20 @@
+{
+  "ClientIP": "192.168.209.131",
+  "ServerIP": "192.168.209.132",
+
+  "TCPPreProbePort": 1111,
+
+  "InterMeasureTime": 5,
+  "UDPSourcePort": 9876,
+  "UDPDestinationPort": 8765,
+  "UDPPayloadSize": 500,
+  "UDPPacketCount": 3000,
+
+  "TCPPostProbePort": 6666,
+
+  "TCPSYNX": 9990,
+  "TCPSYNY": 8888,
+  "UDPTTL": 255,
+
+  "DebugMode": 1
+}

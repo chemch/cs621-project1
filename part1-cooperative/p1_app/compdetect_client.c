@@ -14,7 +14,7 @@ Configuration run_preprobing_phase(const char *config_file) {
 
     // read the provided configuration file
     fprintf(stderr, "CONFIG FILE: %s\n\n", config_file);
-    Configuration configuration = read_configuration(config_file);
+    Configuration configuration = fetch_configuration(config_file);
 
     // validate that server ip address and port are valid
     if (configuration.server_ip[0] == '\0' || configuration.tcp_pre_probe <= 0) {
