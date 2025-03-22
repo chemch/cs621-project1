@@ -75,16 +75,14 @@ double run_probing_phase(const Configuration *config) {
 
     // create udp socket
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("FAILED TO CREATE UDP SOCKET.");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CREATE UDP SOCKET.");
     }
 
     // increase receive buffer size to reduce packet loss
     int rcvbuf_size = MAX_UDP_BUFFER;
     if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, sizeof(rcvbuf_size)) == -1) {
-        perror("FAILED TO SET BUFFER SIZE.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO SET BUFFER SIZE.");
     }
 
     // set socket receive timeout to prevent blocking
@@ -101,9 +99,8 @@ double run_probing_phase(const Configuration *config) {
 
     // bind socket to server address
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("FAILED TO BIND TO UDP SOCKET.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO BIND TO UDP SOCKET.");
     }
 
     // set up variables for tracking the number of packets received
@@ -202,7 +199,7 @@ double run_probing_phase(const Configuration *config) {
         } else {
 
             // if the packet receive fails, print an error message and break the loop
-            perror("TIMEOUT REACHED OR RECVFROM FAILED.");
+            warn("TIMEOUT REACHED OR RECVFROM FAILED.");
 
             // set the high end to the second to last packet which was the last valid high entropy packet
             if (in_high_phase) {

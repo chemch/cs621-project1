@@ -63,5 +63,6 @@
 #define DEF_BUFFER_SIZE          4096
 #define DEF_PACK_SIZE            1024
 #define DEF_MAX_PACKET_SIZE      4096
+#define DEF_TCP_SYN_FLAG         0x02 // SYN flag for TCP handshake
 
 #endif // P2_COMPDETECT_H

@@ -36,6 +36,8 @@ double process_entropy_flow(const char *client_ip, const char *server_ip,
                         int udp_packet_count, int udp_payload_size,
                         int ttl, int debug_mode, int entropy, int def_timeout) {
 
+    printf("\n\n*****************STARTING A FULL FLOW (HEAD SYN, UDP TRAIN, TAIL SYN)*****************\n\n");
+
     // Initialize RST capture threads and timestamps
     struct timeval head_rst_time, tail_rst_time;
     pthread_t head_thread, tail_thread;

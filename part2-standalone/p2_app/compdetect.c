@@ -63,7 +63,7 @@ int main(const int argc, char *argv[]) {
     }
 
     // Sleep for inter-measurement time
-    printf("SLEEPING FOR %d SECONDS BEFORE HIGH ENTROPY TRAIN...\n", config.inter_measure_time);
+    printf("\n*****************SLEEPING FOR %d SECONDS BEFORE HIGH ENTROPY TRAIN...*****************\n", config.inter_measure_time);
     sleep(config.inter_measure_time);
 
     // Run HIGH entropy train
@@ -89,10 +89,13 @@ int main(const int argc, char *argv[]) {
     double delta_delta = high_delta - low_delta;
     printf("DELTA DIFFERENCE (HIGH - LOW): %.6f SECONDS\n", delta_delta);
 
+    printf("\n*****************COMPRESSION CALC RESULT*****************\n");
+
+    // wil print exactly as specified in the assignment
     if (delta_delta > DEF_COMPRESION_THRES) {
-        printf("COMPRESSION DETECTED!\n");
+        printf("Compression Detected!\n");
     } else {
-        printf("NO COMPRESSION DETECTED.\n");
+        printf("No compression was detected.\n");
     }
 
     return EXIT_SUCCESS;

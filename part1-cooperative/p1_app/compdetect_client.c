@@ -18,8 +18,7 @@ Configuration run_preprobing_phase(const char *config_file) {
 
     // validate that server ip address and port are valid
     if (configuration.server_ip[0] == '\0' || configuration.tcp_pre_probe <= 0) {
-        fprintf(stderr, "INVALID SERVER CONFIGURATION FILE PROVIDED.\n");
-        exit(EXIT_FAILURE);
+        fatal_error("INVALID SERVER CONFIGURATION FILE PROVIDED. BAD SERVER IP OR PORT.");
     }
 
     // print configuration for validation if in debug mode
@@ -99,8 +98,7 @@ void run_postprobing_phase(const Configuration *config) {
 
     // create tcp socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("FAILED TO CEATE POST-PROBE SOCKET.");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CREATE POST-PROBE SOCKET.");
     }
 
     // set up server address
@@ -110,17 +108,15 @@ void run_postprobing_phase(const Configuration *config) {
 
     // connect to server socket
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("FAILED TO CONNECT TO SERVER.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CONNECT TO SERVER.");
     }
 
     // receive results from calculation of server
     int received_bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (received_bytes <= 0) {
-        perror("FAILED TO GET RESULTS OF CALCULATION FROM SERVER.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO GET RESULTS OF CALCULATION FROM SERVER.");
     }
 
     // null-terminate the received data and print answer to part 1 task

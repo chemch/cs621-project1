@@ -11,5 +11,7 @@
   "TCPSYNY": 8888,
   "UDPTTL": 255,
 
-  "DebugMode": 0
+  "DebugMode": 0,
+
+  "InterMeasureTime": 2
 }

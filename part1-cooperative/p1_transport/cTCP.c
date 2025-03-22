@@ -11,8 +11,7 @@ int build_tcp_server_socket(int port) {
     struct sockaddr_in server_addr;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("TCP SOCKET CREATION FAILED.");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CREATE TCP SOCKET.");
     }
 
     int opt = 1;
@@ -23,16 +22,16 @@ int build_tcp_server_socket(int port) {
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(port);
 
+    // bind the socket to the server address
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("TCP SOCKET BIND FAILED.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO BIND TCP SOCKET.");
     }
 
+    // listen for incoming connections
     if (listen(sock, 5) == -1) {
-        perror("TCP LISTEN FAILED.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO LISTEN ON TCP SOCKET.");
     }
 
     return sock;
@@ -48,9 +47,8 @@ int accept_tcp_client(int server_sock, struct sockaddr_in *client_addr) {
     socklen_t len = sizeof(*client_addr);
     int client_sock = accept(server_sock, (struct sockaddr *)client_addr, &len);
     if (client_sock == -1) {
-        perror("TCP ACCEPT FAILED.");
         close(server_sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO ACCEPT CLIENT CONNECTION.");
     }
     return client_sock;
 }
@@ -63,9 +61,12 @@ int accept_tcp_client(int server_sock, struct sockaddr_in *client_addr) {
 */
 int recv_data(int sock, char *buffer, size_t size) {
     int bytes = recv(sock, buffer, size, 0);
+
+    // warn the operator if receive fails or is empty
     if (bytes < 0) {
-        perror("TCP RECEIVE FAILED.");
+        warn("TCP RECEIVE FAILED.");
     }
+
     return bytes;
 }
 
@@ -78,9 +79,12 @@ int recv_data(int sock, char *buffer, size_t size) {
 */
 int send_data(int sock, const char *data, size_t size) {
     int bytes = send(sock, data, size, 0);
+
+    // warn the operator if send fails
     if (bytes < 0) {
-        perror("TCP SEND FAILED.");
+        warn("TCP SEND FAILED.");
     }
+
     return bytes;
 }
 

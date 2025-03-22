@@ -3,8 +3,6 @@
 
 #include "p2_app/compdetect_alone.h"
 
-#define TH_SYN 0x02  ///< TCP SYN flag bit
-
 struct ipheader {
     unsigned char iph_l:4, iph_v:4;           // iph_v: IP version (always 4 for IPv4), iph_l: Header length in 32-bit words
     unsigned char iph_tos;                    // Type of Service (TOS), usually 0

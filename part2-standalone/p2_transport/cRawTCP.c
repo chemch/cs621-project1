@@ -69,25 +69,25 @@ int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port) {
     tcphdr->th_ack = 0;
     tcphdr->th_x2 = 0;
     tcphdr->th_off = 5;
-    tcphdr->th_flags = TH_SYN;
+    tcphdr->th_flags = DEF_TCP_SYN_FLAG;
     tcphdr->th_win = htons(65535);
     tcphdr->th_sum = 0;
     tcphdr->th_urp = 0;
 
     // Pseudo-header for checksum
     struct pseudo_header psh = {
-        .source_address = iphdr->iph_src,
         .dest_address = iphdr->iph_dst,
+        .source_address = iphdr->iph_src,
         .placeholder = 0,
         .protocol = IPPROTO_TCP,
         .tcp_length = htons(sizeof(struct tcpheader))
     };
 
     // Pseudo Header setup
-    int psize = sizeof(struct pseudo_header) + sizeof(struct tcpheader);
-    char *psudeo_header = malloc(psize);
+    int pseudo_header_size = sizeof(struct pseudo_header) + sizeof(struct tcpheader);
+    char *psudeo_header = malloc(pseudo_header_size);
     if (!psudeo_header) {
-        perror("FAILED TO ALLOCATE MEMORY FOR PSEUDOGRAM");
+        perror("FAILED TO ALLOCATE MEMORY FOR PSEUDO HEADER");
         close(fd);
         return -1;
     }
@@ -97,7 +97,7 @@ int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port) {
     memcpy(psudeo_header + sizeof(psh), tcphdr, sizeof(struct tcpheader));
 
     // Checksums
-    tcphdr->th_sum = computeChecksum(psudeo_header, psize);
+    tcphdr->th_sum = computeChecksum(psudeo_header, pseudo_header_size);
     iphdr->iph_sum = computeChecksum((const char*) packet, ntohs(iphdr->iph_tl));
 
     free(psudeo_header);
@@ -159,8 +159,8 @@ int record_reset_packet(int target_port, struct timeval *rst_timestamp, int rese
     while (1) {
         gettimeofday(&now, NULL);
         if (now.tv_sec - start.tv_sec >= reset_timeout) {
-            printf("TIMEOUT WAITING FOR RST.\n");
-            break;
+            // will print exactly as specified in the assignment
+            fatal_error("Failed to detect due to insufficient information.");
         }
 
         // Receive packet

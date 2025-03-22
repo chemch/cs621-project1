@@ -29,8 +29,7 @@ Configuration fetch_configuration(const char *configuration_file) {
 
     // input parameter checking: make sure the file can be opened
     if (!raw_file) {
-        perror("FAILED TO OPEN CONFIGURATION FILE.");
-        exit(EXIT_FAILURE);
+        fatal_error("UNABLE TO OPEN CONFIGURATION FILE. CHECK THE FILE RIGHT NOW!");
     }
 
     // determine file size
@@ -51,8 +50,7 @@ Configuration fetch_configuration(const char *configuration_file) {
 
     // validate that the json has been properly parsed to avoid errors later
     if (!json) {
-        perror("UNABLE TO PARSE JSON CONFIG FILE. CHECK THE FILE.");
-        exit(EXIT_FAILURE);
+        fatal_error("UNABLE TO PARSE JSON CONFIG FILE. CHECK THE FILE!!!");
     }
 
     // iterate through the json object and populate the configuration object with the values
@@ -255,8 +253,7 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // create tcp socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("FAILED TO CREATE SOCKET.");
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CREATE TCP SOCKET.");
     }
 
     // set the server port
@@ -265,16 +262,14 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // set the server ip and validate
     if (inet_pton(AF_INET, configuration->server_ip, &server_addr.sin_addr) != 1) {
-        perror("INVALID SERVER IP ADDRESS.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("INVALID SERVER IP ADDRESS. UNABLE TO SET IT.");
     }
 
     // initiate connection to server using ip and port
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("FAILED TO CONNECT TO SERVER.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CONNECT TO SERVER.");
     }
 
     // convert configuration to json for transmission over the network
@@ -282,17 +277,15 @@ void forward_configuration_to_server(Configuration *configuration) {
 
     // validate that the json was created successfully
     if (!json_data) {
-        perror("FAILED TO CONVERT JSON CONFIGURATION DATA.");
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO CONVERT JSON CONFIGURATION DATA.");
     }
 
     // forward JSON configuration using the socket
     if (send(sock, json_data, strlen(json_data), 0) == -1) {
-        perror("FAILED TO FORWARD THE CONFIGURATION TO SERVER.");
         free(json_data);
         close(sock);
-        exit(EXIT_FAILURE);
+        fatal_error("FAILED TO SEND CONFIGURATION TO SERVER. HOW SAD...");
     }
 
     printf("CONFIG SENT SUCCESSFULLY TO %s:%d \n", configuration->server_ip, configuration->tcp_pre_probe);
