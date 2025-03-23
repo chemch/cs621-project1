@@ -77,7 +77,7 @@ For this project I would like to cite the following sources which I used to unde
 - p2_flow: Credit to Beej's Guide to C Programming for MultiThreading Examples
     - https://beej.us/guide/bgc/html/split/multithreading.html#multithreading
 - p2_transport/cRawTCP.c: https://www.tenouk.com/Module43a.html & https://docs.oracle.com/cd/E36784_01/html/E36875/setsockopt-3socket.html
-- Copilot: Helped me with auto-completions, generating documentation and beautifying the code
+- Formatting/Header Files: Copilot helped with auto-completions, generating documentation and formatting the header files
 - p2_transport/cRawTCP.c: Credit to David Hoze for his CheckSum Implementation:
     - https://gist.github.com/david-hoze/0c7021434796997a4ca42d7731a7073a
 - p2_transport/cRawTCP.c: Referenced some good examples from Maxxor on how to manually craft TCP packets or listen for RSTs
