@@ -59,7 +59,7 @@ int accept_tcp_client(int server_sock, struct sockaddr_in *client_addr) {
  * @return the number of bytes received
  * @brief This function receives data over a tcp connection.
 */
-int recv_data(int sock, char *buffer, size_t size) {
+int receive_data(int sock, char *buffer, size_t size) {
     int bytes = recv(sock, buffer, size, 0);
 
     // warn the operator if receive fails or is empty
@@ -77,7 +77,7 @@ int recv_data(int sock, char *buffer, size_t size) {
 * @return the number of bytes sent
 * @brief This function sends data over a tcp connection.
 */
-int send_data(int sock, const char *data, size_t size) {
+int transmit_data(int sock, const char *data, size_t size) {
     int bytes = send(sock, data, size, 0);
 
     // warn the operator if send fails

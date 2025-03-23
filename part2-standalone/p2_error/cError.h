@@ -11,8 +11,4 @@ void fatal_error(const char *message);
 /// @param message The custom error message.
 void fatal_perror(const char *message);
 
-/// @brief Log a warning (does not exit).
-/// @param message Warning message to print.
-void warn(const char *message);
-
 #endif // ERROR_H

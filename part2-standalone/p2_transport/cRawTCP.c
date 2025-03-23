@@ -6,13 +6,19 @@
 /// @return  checksum
 unsigned short computeChecksum(const char *buf, unsigned int size) {
     unsigned long sum = 0;
+    
+    // Sum all 16-bit words
     for (unsigned int i = 0; i < size - 1; i += 2) {
         unsigned short word = *(unsigned short *)&buf[i];
         sum += word;
     }
+
+    // Add left-over byte, if any
     if (size & 1) {
         sum += (unsigned char)buf[size - 1];
     }
+
+    // Fold 32-bit sum to 16 bits
     while (sum >> 16) sum = (sum & 0xFFFF) + (sum >> 16);
     return (unsigned short)(~sum);
 }

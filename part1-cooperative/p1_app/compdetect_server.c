@@ -23,7 +23,7 @@ Configuration run_preprobing_phase(int port) {
     printf("CLIENT CONNECTED FROM PORT %d.\n", ntohs(client_addr.sin_port));
 
     char buffer[DEF_BUFFER_SIZE];
-    int received_bytes = recv_data(client_sock, buffer, DEF_BUFFER_SIZE - 1);
+    int received_bytes = receive_data(client_sock, buffer, DEF_BUFFER_SIZE - 1);
     if (received_bytes <= 0) {
         fprintf(stderr, "FAILED TO RECEIVE CONFIGURATION.\n");
         close_tcp_connection(client_sock);
@@ -252,7 +252,7 @@ void run_postprobing_phase(const Configuration *config, double time_delta) {
     printf("WAITING FOR CLIENT ON PORT %d...\n", config->tcp_post_probe);
     int client_sock = accept_tcp_client(server_sock, &client_addr);
 
-    send_data(client_sock, result_msg, strlen(result_msg));
+    transmit_data(client_sock, result_msg, strlen(result_msg));
     printf("RESULT SENT TO CLIENT.\n");
 
     close_tcp_connection(client_sock);

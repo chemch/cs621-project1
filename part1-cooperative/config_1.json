@@ -1,6 +1,6 @@
 {
   "ClientIP": "192.168.209.131",
-  "ServerIP": "192.168.209.132",
+  "ServerIP": "192.168.209.133",
 
   "TCPPreProbePort": 7777,
 
@@ -8,13 +8,9 @@
   "UDPSourcePort": 9876,
   "UDPDestinationPort": 8765,
   "UDPPayloadSize": 1000,
-  "UDPPacketCount": 6000,
+  "UDPPacketCount": 500,
 
   "TCPPostProbePort": 6666,
 
-  "TCPSYNX": 9990,
-  "TCPSYNY": 8888,
-  "UDPTTL": 255,
-
-  "DebugMode": 0
+  "DebugMode": 1
 }

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stddef.h> 
 
 // -----------------------------
 // Networking and Socket Includes

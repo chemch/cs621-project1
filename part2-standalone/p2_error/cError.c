@@ -13,9 +13,3 @@ void fatal_perror(const char *message) {
     fprintf(stderr, "**ERROR**: %s - %s\n", message, strerror(errno));
     exit(EXIT_FAILURE);
 }
-
-/// @brief Log a warning (does not exit).
-/// @param message Warning message to print.
-void warn(const char *message) {
-    fprintf(stderr, "**WARNING**: %s\n", message);
-}
