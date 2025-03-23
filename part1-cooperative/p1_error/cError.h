@@ -1,15 +1,11 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "compdetect_alone.h"
+#include "compdetect_coop.h"
 
 /// @brief Print an error message and exit the program.
 /// @param message The custom error message.
 void fatal_error(const char *message);
-
-/// @brief Print an error message with errno and exit the program.
-/// @param message The custom error message.
-void fatal_perror(const char *message);
 
 /// @brief Log a warning (does not exit).
 /// @param message Warning message to print.

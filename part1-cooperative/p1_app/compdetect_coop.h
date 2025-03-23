@@ -48,6 +48,7 @@
 #define DEF_INTER_MEASURE_TIME   15
 #define DEF_UDP_PACKET_COUNT   6000
 #define DEF_UDP_TTL            255
+#define DEF_PACK_SIZE          1024
 #define DEF_BUFFER_SIZE        4096  // Buffer size for network communication
 
 #endif // COMPDETECT_COOP_H
