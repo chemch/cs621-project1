@@ -5,6 +5,8 @@
  *
  * @param arg Pointer to rst_thread_args containing the port and timestamp storage.
  * @return NULL
+ * 
+ * Citation: https://beej.us/guide/bgc/html/split/multithreading.html#multithreading
  */
 void *monitor_reset_thread(void *arg) {
     struct rst_thread_args *args = (struct rst_thread_args *)arg;
@@ -43,8 +45,8 @@ double process_entropy_flow(const char *client_ip, const char *server_ip,
     pthread_t head_thread, tail_thread;
 
     // Thread arguments for HEAD and TAIL RST capture (with default timeout)
-    struct rst_thread_args head_args = {tcp_syn_x, &head_rst_time, def_timeout * 4, def_timeout, debug_mode};
-    struct rst_thread_args tail_args = {tcp_syn_y, &tail_rst_time, def_timeout * 4, def_timeout, debug_mode};
+    struct rst_thread_args head_args = {tcp_syn_x, &head_rst_time, def_timeout, def_timeout + 1, debug_mode};
+    struct rst_thread_args tail_args = {tcp_syn_y, &tail_rst_time, def_timeout, def_timeout + 1, debug_mode};
 
     // Start HEAD RST capture thread
     if (pthread_create(&head_thread, NULL, monitor_reset_thread, &head_args) != 0) {

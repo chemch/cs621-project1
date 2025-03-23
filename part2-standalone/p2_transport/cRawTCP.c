@@ -4,6 +4,7 @@
 /// @param buf buffer to calculate checksum
 /// @param size size of buffer
 /// @return  checksum
+/// Citation: https://gist.github.com/david-hoze/0c7021434796997a4ca42d7731a7073a
 unsigned short computeChecksum(const char *buf, unsigned int size) {
     unsigned long sum = 0;
     
@@ -29,6 +30,7 @@ unsigned short computeChecksum(const char *buf, unsigned int size) {
 /// @param dst_ip destination IP address
 /// @param dst_port destination port number
 /// @return result of sending SYN packet
+/// Citation: https://www.tenouk.com/Module43a.html
 int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port) {
 
     // Open raw socket
@@ -109,6 +111,7 @@ int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port) {
     free(psudeo_header);
 
     // Include IP header
+    // Citation: https://docs.oracle.com/cd/E36784_01/html/E36875/setsockopt-3socket.html
     int one = 1;
     if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
         perror("FAILED TO SET IP HEADER INCLUSION");
@@ -131,6 +134,8 @@ int tcp_syn_transmission(const char *src_ip, const char *dst_ip, int dst_port) {
 /// @param target_port target port to listen for RST
 /// @param rst_timestamp timestamp of RST packet
 /// @return capture success
+/// Citation: Referred to some examples from Maxxor particularly:
+/// https://github.com/MaxXor/raw-sockets-example/blob/master/rawsockets.c
 int record_reset_packet(int target_port, struct timeval *rst_timestamp, int reset_timeout, int socket_timeout, int debug_mode) {
 
     // Open raw socket
